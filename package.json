@@ -1,0 +1,19 @@
+{
+  "name": "tcp-hops",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --detectOpenHandles"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^27.0.4",
+    "jest-cli": "^27.0.4",
+    "jest-junit": "^12.2.0"
+  },
+  "dependencies": {
+    "ws": "^7.5.0"
+  }
+}
