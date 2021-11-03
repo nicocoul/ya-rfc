@@ -1,3 +1,5 @@
+'use strict'
+
 const {stdout} = require('process')
 
 function newLogger(name) {

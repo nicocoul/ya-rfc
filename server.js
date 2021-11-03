@@ -1,3 +1,5 @@
+'use strict'
+
 const net = require('net')
 const EventEmitter = require('events')
 const { newChannel, newEncoder, newDecoder, newPassTrough  } = require('./common.js')

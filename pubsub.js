@@ -1,14 +1,79 @@
-
 'use strict'
-
 const { TOPICS } = require('./constants')
-const { newClient } = require('./client')
+const path = require('path')
+const { fork } = require("child_process");
 const logger = require('./logger')(__filename)
 function addPublisherRole(client) {
     const publish = (topic, message) => {
         client.write({ t: topic, m: message })
     }
     return { publish }
+}
+
+function newRequests() {
+    const state = []
+    const getIndex = (id) => {
+        return state.findIndex(s => s.request.id === id)
+    }
+    return {
+        add: (request, callback) => {
+            state.push({ request, callback })
+        },
+        remove: (id) => {
+            const index = getIndex(id)
+            if (index !== -1) {
+                state.splice(index, 1)
+            }
+        },
+        get: (id) => {
+            const index = getIndex(id)
+            if (index !== -1) {
+                return state[index]
+            }
+        }
+    }
+}
+
+function addRpcClientRole(client) {
+
+    const requests = newRequests()
+    let requestId = new Date().getTime()
+
+    client.on('data', d => {
+        if (!d.t) {
+            logger.warn(`${client.id}: no .t in received data`)
+            return
+        }
+        if (d.t !== TOPICS.RPC_EXECUTE) return
+        if (d.m.id) {
+            if (d.m.error !== undefined) {
+                try {
+                    requests.get(d.m.id).callback(d.m.error, undefined, undefined)
+                    requests.remove(d.m.id)
+                } catch (error) {
+                    logger.error(`execute role, ${JSON.stringify(d.m)} ${error.message}`)
+                }
+
+            } else if (d.m.result !== undefined) {
+                try {
+                    requests.get(d.m.id).callback(undefined, d.m.result, undefined)
+                    requests.remove(d.m.id)
+                } catch (error) {
+                    logger.error(`execute role, ${JSON.stringify(d.m)} ${error.message}`)
+                }
+            } else if (d.m.progress !== undefined) {
+                requests.get(d.m.id).callback(undefined, undefined, d.m.progress)
+            }
+        }
+    })
+
+    const execute = (procedure, args, callback, affinity) => {
+        requestId++
+        const request = { id: requestId, procedure, args, affinity }
+        client.write({ t: TOPICS.RPC_EXECUTE, m: request })
+        requests.add(request, callback)
+    }
+    return { execute }
 }
 
 
@@ -53,6 +118,7 @@ function addSubscriberRole(client, subscribeDelay = 30000) {
             logger.warn(`${client.id}: no .t in received data`)
             return
         }
+        if (d.t === TOPICS.RPC_EXECUTE) return
         if (!topics.exists(d.t)) {
             logger.warn(`${client.id}: unknown .t ${d.t} in received data`)
             return
@@ -102,9 +168,100 @@ function addSubscriberRole(client, subscribeDelay = 30000) {
     return { subscribe, unsubscribe, destroy }
 }
 
-function start(host, port, reSubscribeDelay) {
-    const client = newClient(host, port)
-    const subscriberRole = addSubscriberRole(client, reSubscribeDelay)
+function newChildProcess() {
+    const state = []
+    let i = 0
+    return {
+        add: (process) => {
+            state.push(process)
+        },
+        removeByPid: (pid) => {
+            const index = state.findIndex(p => p.pid === pid)
+            if (index !== -1) {
+                state.splice(index, 1)
+            }
+        },
+        pop: () => {
+            i = i % state.length
+            const p = state[i]
+            i++
+            return p
+        }
+    }
+}
+
+function addRpcServerRole(client, modulePath, affinity = null, childProcess = 5) {
+    const childProcesses = newChildProcess()
+    const createChildProcess = () => {
+        const childProcess = fork(path.join(__dirname, 'rpcChild.js'))
+        childProcess.send({ modulePath })
+        childProcess.on('error', (error) => {
+            logger.error(error.stack)
+        })
+        childProcess.on('close', (code) => {
+            childProcesses.removeByPid(childProcess.pid)
+            logger.debug(`child process closed with code ${code}`)
+            createChildProcess()
+        })
+        childProcess.on('message', data => {
+            if (data.procedure) {
+                client.write({ t: TOPICS.RPC_EXECUTE, m: data })
+            } else if (data.cpu) {
+                client.write({ t: TOPICS.OS_LOAD, m: data })
+            }
+        })
+        childProcesses.add(childProcess)
+    }
+    for (let i = 0; i < childProcess; i++) {
+        createChildProcess()
+    }
+
+    const procedures = require(modulePath)
+    client.on('data', async d => {
+        if (!modulePath) {
+            return
+        }
+        if (!d.t) {
+            logger.warn(`${client.id}: no .t in received data`)
+            return
+        }
+        if (d.t !== TOPICS.RPC_EXECUTE) return
+
+        if (!d.m.procedure) {
+            logger.warn(`no procedure defined`)
+            client.write({ t: TOPICS.RPC_EXECUTE, m: { ...d.m, error: `no procedure defined` } })
+            return
+        }
+        const { procedure } = d.m
+        if (!Object.keys(procedures).includes(procedure)) {
+            logger.warn(`procedure ${procedure} not found`)
+            client.write({ t: TOPICS.RPC_EXECUTE, m: { ...d.m, error: `procedure ${procedure} not found` } })
+            return
+        }
+        try {
+            console.log(`execute ${procedure} on ${affinity}`)
+            childProcesses.pop().send(d.m)
+        } catch (error) {
+            logger.error(error.stack)
+            client.write({ t: TOPICS.RPC_EXECUTE, m: { ...d.m, error: error.message } })
+        }
+    })
+
+    client.on('connect', () => {
+        const procedureNames = Object.keys(procedures)
+        if (procedureNames.length) {
+            client.write({ t: TOPICS.RPC_EXECUTOR, m: { procedures: Object.keys(procedures), affinity } })
+        }
+    })
+    const destroy = () => {
+        if (notifyTimeout) clearTimeout(notifyTimeout)
+    }
+
+    return { destroy }
+}
+
+function createPubSubClient(client) {
+    const subscriberRole = addSubscriberRole(client, notifyDelay)
     const publisherRole = addPublisherRole(client)
     return {
         subscribe: subscriberRole.subscribe,
@@ -117,6 +274,27 @@ function start(host, port, reSubscribeDelay) {
     }
 }
 
+function createRpcClient(client) {
+    const rpcClientRole = addRpcClientRole(client)
+    return {
+        execute: rpcClientRole.execute,
+        destroy: () => {
+            client.destroy()
+        }
+    }
+}
+
+function createRpcServer(client, modulePath, childProcess) {
+    addRpcServerRole(client, modulePath, childProcess)
+    return {
+        destroy: () => {
+            client.destroy()
+        }
+    }
+}
+
 module.exports = {
-    start
+    createPubSubClient,
+    createRpcClient,
+    createRpcServer
 }

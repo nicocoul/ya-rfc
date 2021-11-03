@@ -1,3 +1,5 @@
+'use strict'
+
 const { DecodeProtocolStream, EncodeProtocolStream } = require('./serde.js')
 const { Duplex, PassThrough, Writable, Readable, Transform } = require('stream')
 
