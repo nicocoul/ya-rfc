@@ -1,8 +1,8 @@
-const store = require('../cacheStore')
+const store = require('../lib/memory-store')
 // const { newPassTrough } = require('../common')
-const { newAccumulator, pause } = require('./common')
-const { newReadable } = require('../common')
-const logger = require('../logger')(__filename)
+const { newAccumulator, pause } = require('../lib/common')
+const { newReadable } = require('../lib/common')
+const logger = require('../lib/logger')(__filename)
 
 test('it works', async () => {
     const topicName = 'newTopic2'
