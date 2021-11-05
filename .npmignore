@@ -4,7 +4,7 @@
 .git/
 .lock-*
 node_modules/
-debug/
+examples/
 docs/
 build/
 tests/
