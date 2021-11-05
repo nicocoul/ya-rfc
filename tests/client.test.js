@@ -1,52 +1,52 @@
 const { newServer } = require('../server')
 const { newClient } = require('../client')
-const { pause} = require('./common')
+const { pause } = require('./common')
 
 const PORT = 8084
 const HOST = '::'
 
 test('it sends objects to server', async () => {
-    const received = []
+  const received = []
 
-    const client = newClient(HOST, PORT)
-    client.write({ id: 1 })
-    client.write({ id: 2 })
-    await pause(150)
-    const server = newServer(PORT)
-    server.on('new-client', c => {
-        c.on('data', (data) => {
-            received.push(data)
-        })
+  const client = newClient(HOST, PORT)
+  client.write({ id: 1 })
+  client.write({ id: 2 })
+  await pause(150)
+  const server = newServer(PORT)
+  server.on('new-client', c => {
+    c.on('data', (data) => {
+      received.push(data)
     })
-    await pause(150)
-    client.destroy()
-    server.close()
+  })
+  await pause(150)
+  client.destroy()
+  server.close()
 
-    expect(received).toStrictEqual([{ id: 1 }, { id: 2 }])
+  expect(received).toStrictEqual([{ id: 1 }, { id: 2 }])
 })
 
 test('it receives objects from server', async () => {
-    const received = []
+  const received = []
 
-    const client = newClient(HOST, PORT)
-    client.on('data', data => {
-        received.push(data)
-    })
-    
-    await pause(150)
-    const server = newServer(PORT)
-    server.on('new-client', c => {
-        c.on('data', (data) => {
-            received.push(data)
-        })
-        c.write({ id: 1 })
-        c.write({ id: 2 })
-    })
-    await pause(150)
-    client.destroy()
-    server.close()
+  const client = newClient(HOST, PORT)
+  client.on('data', data => {
+    received.push(data)
+  })
 
-    expect(received).toStrictEqual([{ id: 1 }, { id: 2 }])
+  await pause(150)
+  const server = newServer(PORT)
+  server.on('new-client', c => {
+    c.on('data', (data) => {
+      received.push(data)
+    })
+    c.write({ id: 1 })
+    c.write({ id: 2 })
+  })
+  await pause(150)
+  client.destroy()
+  server.close()
+
+  expect(received).toStrictEqual([{ id: 1 }, { id: 2 }])
 })
 /*
 test('it throws when sending and when client was destroyed', async () => {
@@ -68,7 +68,6 @@ test('it throws when sending and when client was destroyed', async () => {
         server.close()
     }
 })
-
 
 test('it throws when sending and when server was closed', async () => {
     const server = newServer(PORT)

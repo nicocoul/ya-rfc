@@ -1,15 +1,15 @@
 const { newServer } = require('../server')
 const { newClient } = require('../client')
-const { pause} = require('./common')
+const { pause } = require('./common')
 const logger = require('../logger')(__filename)
 
 const PORT = 8081
 const HOST = '::'
 
 test('it closes', async () => {
-    const server = newServer(PORT)
-    await pause(100)
-    server.close()
+  const server = newServer(PORT)
+  await pause(100)
+  server.close()
 })
 
 /*
@@ -27,14 +27,13 @@ test('it receives objects', async () => {
     const client2 = newClient(HOST, PORT)
     client1.write({ id: 1 })
     client2.write({ id: 2 })
-    
+
     await pause(50)
     await client1.destroy()
     await client2.destroy()
     server.close()
 
     expect(received.length).toStrictEqual(2)
-
 
 })
 */
@@ -74,7 +73,6 @@ test('server receives messages from a client', async () => {
     client.send({ id: 1 })
     client.send({ id: 2 })
 
-
     return delay(() => {
         client.disconnect()
         server.close()
@@ -99,7 +97,6 @@ test('server receives messages from multiple clients', async () => {
     client1.send({ id: 2 })
     client2.send({ id: 1 })
     client2.send({ id: 2 })
-
 
     return delay(() => {
         client1.disconnect()
@@ -160,7 +157,6 @@ test('server sends messages to a client', async () => {
     }, 100)
 })
 
-
 test('server sends messages to clients', async () => {
     const server = newWsServer(PORT, 50)
 
@@ -194,8 +190,6 @@ test('server sends messages to clients', async () => {
         expect(ms2.map(m => m.id)).toStrictEqual([3, 4])
     }, 200)
 })
-
-
 
 test('server receives 400 messages from a client in less than 1000ms', async () => {
 

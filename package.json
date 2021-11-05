@@ -1,19 +1,43 @@
 {
-  "name": "tcp-hops",
-  "version": "1.0.0",
+  "name": "yaps-node",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "jest --detectOpenHandles"
-  },
-  "author": "",
+  "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
   "license": "ISC",
+  "keywords": [
+    "rpc",
+    "pubsub",
+    "socket",
+    "tcp",
+    "tls",
+    "networking",
+    "realtime",
+    "server",
+    "client"
+  ],
+  "homepage": "https://github.com/nicocoul/yaps-node",
+  "bugs": {
+    "url": "https://github.com/nicocoul/yaps-node/issues"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "jest --detectOpenHandles",
+    "lint": "eslint",
+    "lint:fix": "eslint --ext .js --fix"
+  },
+  "dependencies": {},
   "devDependencies": {
+    "eslint": "^8.1.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.1",
     "jest": "^27.0.4",
     "jest-cli": "^27.0.4",
     "jest-junit": "^12.2.0"
-  },
-  "dependencies": {
-    "ws": "^7.5.0"
   }
 }
