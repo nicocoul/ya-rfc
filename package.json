@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
-  "license": "ISC",
   "keywords": [
     "rpc",
     "pubsub",
@@ -23,7 +22,7 @@
   "directories": {
     "lib": "./lib"
   },
-  "license": "Apache-2.0",
+  "license": "MIT",
   "scripts": {
     "test": "jest --detectOpenHandles",
     "lint": "eslint",
