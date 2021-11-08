@@ -1,4 +1,4 @@
-const { EncodeProtocolStream, DecodeProtocolStream, encodeOne, decodeOne } = require('../serde')
+const { EncodeProtocolStream, DecodeProtocolStream, encodeOne, decodeOne } = require('../lib/serde')
 const { newArrayReadable, pause, newAccumulator } = require('./common')
 const fs = require('fs')
 const path = require('path')

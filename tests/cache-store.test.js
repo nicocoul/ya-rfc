@@ -1,6 +1,6 @@
 const store = require('../lib/memory-store')
 // const { newPassTrough } = require('../common')
-const { newAccumulator, pause } = require('../lib/common')
+const { newAccumulator, pause } = require('./common')
 const { newReadable } = require('../lib/common')
 const logger = require('../lib/logger')(__filename)
 

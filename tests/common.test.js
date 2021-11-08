@@ -1,4 +1,4 @@
-const { newWrapper } = require('../common')
+const { newWrapper } = require('../lib/common')
 const { pause, newAccumulator } = require('./common')
 
 test('wrapper wraps', async () => {

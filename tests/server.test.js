@@ -1,7 +1,7 @@
-const { newServer } = require('../server')
-const { newClient } = require('../client')
+const { newServer } = require('../lib/server')
+const { createChannel } = require('../lib/channel')
 const { pause } = require('./common')
-const logger = require('../logger')(__filename)
+const logger = require('../lib/logger')(__filename)
 
 const PORT = 8081
 const HOST = '::'
@@ -12,31 +12,29 @@ test('it closes', async () => {
   server.close()
 })
 
-/*
 test('it receives objects', async () => {
-    const server = newServer(PORT)
-    const received = []
-    server.on('new-client', c => {
-        c.on('data', (data) => {
-            received.push(data)
-        })
+  const server = newServer(PORT)
+  const received = []
+  server.on('new-channel', c => {
+    c.on('data', (data) => {
+      received.push(data)
     })
-    // expect(server.address.port).toStrictEqual(PORT)
-    // expect(server.address.host).toStrictEqual('::')
-    const client1 = newClient(HOST, PORT)
-    const client2 = newClient(HOST, PORT)
-    client1.write({ id: 1 })
-    client2.write({ id: 2 })
+  })
+  // expect(server.address.port).toStrictEqual(PORT)
+  // expect(server.address.host).toStrictEqual('::')
+  const client1 = createChannel(HOST, PORT)
+  const client2 = createChannel(HOST, PORT)
+  client1.write({ id: 1 })
+  client2.write({ id: 2 })
 
-    await pause(50)
-    await client1.destroy()
-    await client2.destroy()
-    server.close()
+  await pause(50)
+  await client1.destroy()
+  await client2.destroy()
+  server.close()
 
-    expect(received.length).toStrictEqual(2)
-
+  expect(received.length).toStrictEqual(2)
 })
-*/
+/**/
 
 // test('client connects to server when server is started after client', async () => {
 //     const client = newWsClient('localhost', PORT, 50)
