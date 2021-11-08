@@ -28,7 +28,9 @@
     "lint": "eslint",
     "lint:fix": "eslint --ext .js --fix"
   },
-  "dependencies": {},
+  "dependencies": {
+    "uuid": "^8.3.2"
+  },
   "devDependencies": {
     "eslint": "^8.1.0",
     "eslint-config-standard": "^16.0.3",

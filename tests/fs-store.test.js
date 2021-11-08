@@ -29,7 +29,7 @@ test('blobAppender persists blobs', async () => {
   appender.on('close', () => {
     closed = true
   })
-  appender.on('error', (err) => {
+  appender.on('error', () => {
     hasError = true
   })
 

@@ -1,5 +1,7 @@
 'use strict'
-const clients = require('./lib/pubsub')
+const pubsubClient = require('./lib/pubsub-client')
+const rpcClient = require('./lib/rpc-client')
+const rpcServer = require('./lib/rpc-server')
 const broker = require('./lib/broker')
 const tcp = require('./lib/channel')
 
@@ -9,14 +11,18 @@ module.exports = {
   },
   createRpcServer: (options) => {
     const tcpChannel = tcp.createChannel(options.host, options.port)
-    return clients.createRpcServer(tcpChannel, options.modulePath, options.affinity, options.childProcessesCount)
+    return rpcServer.createRpcServer(tcpChannel, options.modulePath, options.affinity, options.childProcessesCount)
   },
   createRpcClient: (options) => {
     const tcpChannel = tcp.createChannel(options.host, options.port)
-    return clients.createRpcClient(tcpChannel)
+    return rpcClient.createRpcClient(tcpChannel)
   },
   createPubSubClient: (options) => {
     const tcpChannel = tcp.createChannel(options.host, options.port)
-    return clients.createPubSubClient(tcpChannel)
+    return pubsubClient.createPubSubClient(tcpChannel)
   }
 }
+
+process.on('warning', e => {
+  console.warn(e.stack)
+})

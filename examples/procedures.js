@@ -1,18 +1,12 @@
 module.exports = {
-  count: (count) => {
+  count: (count, progress) => {
     let counter = 0
     while (counter < count) {
+      if (counter % 10 === 0) {
+        progress(`${counter}/${count}`)
+      }
       counter++
     }
     return counter
-  },
-  err: (a, b) => {
-    throw new Error('some error')
-  },
-  mult: (a, b, onProgress) => {
-    onProgress(`started ${a}*${b}`)
-    return a * b
-  },
-  nores: (a, b, onProgress) => {
   }
 }

@@ -4,7 +4,7 @@ const { createBroker } = require('../lib/broker')
 const { createChannel } = require('../lib/channel')
 const fs = require('fs')
 const path = require('path')
-const pubsub = require('../lib/pubsub')
+const pubsub = require('../lib/pubsub-client')
 
 const logger = require('../lib/logger')(__filename)
 

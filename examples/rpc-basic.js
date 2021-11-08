@@ -9,10 +9,6 @@ createRpcServer({ host: '::', port: 8888, modulePath })
 
 const rpcCient = createRpcClient({ host: '::', port: 8888 })
 
-rpcCient.execute('count', [5000], (error, result) => {
-  if (!error) {
-    console.log('result', result)
-  } else {
-    console.error(error)
-  }
+rpcCient.execute('count', [50], ({ progress, result, error }) => {
+  console.log(progress, result, error)
 })
