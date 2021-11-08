@@ -1,8 +1,8 @@
-const fsStore = require('../lib/fileSystemStore')
+const fsStore = require('../lib/fs-store')
 const { pause, newAccumulator, newArrayReadable } = require('./common')
 const fs = require('fs')
 const path = require('path')
-const logger = require('../logger')(__filename)
+const logger = require('../lib/logger')(__filename)
 
 const tmpPath = path.join(__dirname, 'tmp')
 try { fs.mkdirSync(tmpPath) } catch (_) { }
