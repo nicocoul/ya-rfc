@@ -115,4 +115,3 @@ test('it receives objects', async () => {
   await channel2.destroy()
   server.close()
 })
-/**/

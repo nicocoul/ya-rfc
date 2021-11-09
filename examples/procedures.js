@@ -1,12 +1,10 @@
 module.exports = {
-  count: (count, progress) => {
-    let counter = 0
-    while (counter < count) {
-      if (counter % 10 === 0) {
-        progress(`${counter}/${count}`)
+  count: (until, progress) => {
+    for (let i = 0; i < until; i++) {
+      if (i % 10 === 0) {
+        progress(`${i}/${until}`)
       }
-      counter++
     }
-    return counter
+    return 'count is finished'
   }
 }

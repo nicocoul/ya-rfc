@@ -1,4 +1,4 @@
-const store = require('../lib/memory-store')
+const store = require('../lib/brokers/stores/memory-store')
 // const { newPassTrough } = require('../common')
 const { newAccumulator, pause } = require('./common')
 const { newReadable } = require('../lib/common')

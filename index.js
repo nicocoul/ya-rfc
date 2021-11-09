@@ -1,28 +1,34 @@
 'use strict'
-const pubsubClient = require('./lib/pubsub-client')
-const rpcClient = require('./lib/rpc-client')
-const rpcServer = require('./lib/rpc-server')
-const broker = require('./lib/broker')
+const pubsubClient = require('./lib/broker-clients/pubsub-client')
+const rpcClient = require('./lib/broker-clients/rpc-client')
+const rpcServer = require('./lib/broker-clients/rpc-server')
+const rpcBroker = require('./lib/brokers/rpc-broker')
+const pubsubBroker = require('./lib/brokers/pubsub-broker')
+const constants = require('./lib/constants')
 const tcp = require('./lib/channel')
 
 module.exports = {
-  createBroker: (options) => {
-    return broker.createBroker(options.port, 1000, options.storePath)
+  rpc: {
+    createBroker: (options) => {
+      return rpcBroker.create(options.port)
+    },
+    createServer: (options) => {
+      const tcpChannel = tcp.createChannel(options.host, options.port)
+      return rpcServer.create(tcpChannel, options.modulePath, options.affinity, options.workersCount)
+    },
+    createClient: (options) => {
+      const tcpChannel = tcp.createChannel(options.host, options.port)
+      return rpcClient.create(tcpChannel)
+    }
   },
-  createRpcServer: (options) => {
-    const tcpChannel = tcp.createChannel(options.host, options.port)
-    return rpcServer.createRpcServer(tcpChannel, options.modulePath, options.affinity, options.childProcessesCount)
+  pubsub: {
+    createBroker: (options) => {
+      return pubsubBroker.create(options.port, 1000, options.storePath)
+    },
+    createClient: (options) => {
+      const tcpChannel = tcp.createChannel(options.host, options.port)
+      return pubsubClient.create(tcpChannel)
+    }
   },
-  createRpcClient: (options) => {
-    const tcpChannel = tcp.createChannel(options.host, options.port)
-    return rpcClient.createRpcClient(tcpChannel)
-  },
-  createPubSubClient: (options) => {
-    const tcpChannel = tcp.createChannel(options.host, options.port)
-    return pubsubClient.createPubSubClient(tcpChannel)
-  }
+  internalTopics: { ...constants.TOPICS }
 }
-
-process.on('warning', e => {
-  console.warn(e.stack)
-})

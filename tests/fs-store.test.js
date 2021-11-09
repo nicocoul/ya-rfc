@@ -1,4 +1,4 @@
-const fsStore = require('../lib/fs-store')
+const fsStore = require('../lib/brokers/stores/fs-store')
 const { pause, newAccumulator, newArrayReadable } = require('./common')
 const fs = require('fs')
 const path = require('path')
