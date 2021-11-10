@@ -15,7 +15,7 @@ function init (topic) {
   try { fs.mkdirSync(STORE_PATH) } catch (_) { }
   try { fs.rmdirSync(path.join(STORE_PATH, topic), { recursive: true }) } catch (error) { logger.debug(error.stack) }
 }
-
+/*
 test('it works when subscriptions are made before publishing', async () => {
   const topicName = 'brokerTest1'
   const port = 8889
@@ -193,4 +193,38 @@ test('it resubscribes', async () => {
   p1.destroy()
   s1.destroy()
   expect(received).toStrictEqual(messages)
+})
+*/
+test('it filters messages', async () => {
+  const topicName = 'brokerTest7'
+  const port = 8890
+  init(topicName)
+  const channel1 = createChannel('::', port)
+  const channel2 = createChannel('::', port)
+  await pause(150)
+
+  const messages = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]
+  const received1 = []
+  const received2 = []
+
+  const broker = pubsubBroker.create(port, 2000)
+
+  const s1 = pubsub.create(channel1)
+  s1.subscribe(topicName, message => {
+    received1.push(message)
+  }, 'return m.id<3')
+
+  s1.subscribe(topicName, message => {
+    received2.push(message)
+  })
+
+  const p1 = pubsub.create(channel2)
+  messages.forEach(message => p1.publish(topicName, message))
+
+  await pause(200)
+  broker.close()
+  p1.destroy()
+  s1.destroy()
+  expect(received1).toStrictEqual([{ id: 1 }, { id: 2 }])
+  expect(received2).toStrictEqual(messages)
 })
