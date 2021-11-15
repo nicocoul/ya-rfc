@@ -20,6 +20,10 @@ module.exports = {
       net: (options) => {
         const tcpChannel = clients.channels.net(options.host, options.port)
         return clients.pubsub(tcpChannel)
+      },
+      ws: (options) => {
+        const wsChannel = clients.channels.ws(options.host, options.port, options.ssl)
+        return clients.pubsub(wsChannel)
       }
     }
   },
