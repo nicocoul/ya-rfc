@@ -1,12 +1,7 @@
 'use strict'
-// const pubsubClient = require('./lib/broker-clients/pubsub')
-// const rpcClient = require('./lib/broker-clients/rpc-client')
-// const rpcServer = require('./lib/broker-clients/rpc-server')
+
 const clients = require('./lib/broker-clients')
 const brokers = require('./lib/brokers')
-// const constants = require('./lib/constants')
-// const tcp = require('./lib/channel')
-// const brokerPlugins = require('./lib/brokers/plugins')
 
 module.exports = {
   // rpc: {

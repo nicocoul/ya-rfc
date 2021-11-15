@@ -7,8 +7,8 @@ yapsBroker.plug(plugins.broker.net(server))
 server.listen(8000)
 yapsBroker.publish('some-topic', 'hello')
 
-const yapsClient1 = pubsub.client.net({ host: '::', port: 8000 })
-const yapsClient2 = pubsub.client.net({ host: '::', port: 8000 })
+const yapsClient1 = pubsub.client.net({ host: 'localhost', port: 8000 })
+const yapsClient2 = pubsub.client.net({ host: 'localhost', port: 8000 })
 
 yapsClient1.publish('some-topic', { hello: 'world1' })
 
