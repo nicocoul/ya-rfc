@@ -26,7 +26,7 @@ describe('Pubsub broker', () => {
       pubsubBoker.handleData(csub1, data)
     })
     csub1.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         filter: undefined,
@@ -42,7 +42,7 @@ describe('Pubsub broker', () => {
       pubsubBoker.handleData(csub2, data)
     })
     csub2.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         filter: undefined,
@@ -79,7 +79,7 @@ describe('Pubsub broker', () => {
     cpub.remote.writable.write({ t: 'topic1', m: 3 })
 
     csub1.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         filter: undefined,
@@ -111,7 +111,7 @@ describe('Pubsub broker', () => {
     pubsubBoker.registerChannel(cpub)
 
     csub1.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         offset: 2,
@@ -119,7 +119,7 @@ describe('Pubsub broker', () => {
       }
     })
     csub1.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         offset: 1,
@@ -155,7 +155,7 @@ describe('Pubsub broker', () => {
     pubsubBoker.registerChannel(cpub)
 
     csub1.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         offset: 0,
@@ -169,7 +169,7 @@ describe('Pubsub broker', () => {
     cpub.remote.writable.write({ t: 'topic1', m: 1 })
     await pause(0)
     csub1.remote.writable.write({
-      t: TOPICS.UNSUBSCRIBE,
+      t: COMMANDS.UNSUBSCRIBE,
       m: {
         topic: 'topic1'
       }
@@ -207,7 +207,7 @@ describe('Pubsub broker', () => {
     cpub1.remote.writable.write({ t: 'topic1', m: 3 })
 
     csub1.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         offset: 0,
@@ -243,7 +243,7 @@ describe('Pubsub broker', () => {
       pubsubBoker.handleData(csub, data)
     })
     csub.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         offset: 0,
@@ -256,7 +256,7 @@ describe('Pubsub broker', () => {
     })
 
     csub.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 1,
         offset: 0,
@@ -288,7 +288,7 @@ describe('Pubsub broker', () => {
       pubsub.handleData(csub, data)
     })
     csub.remote.writable.write({
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 0,
         offset: 0,

@@ -17,7 +17,7 @@ describe('Pubsub subscriber client', () => {
     pubsubClient.destroy()
 
     expect(accumulator.data()).toStrictEqual([{
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 1,
         filter: undefined,
@@ -25,7 +25,7 @@ describe('Pubsub subscriber client', () => {
         topic: 'topic1'
       }
     }, {
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 2,
         filter: undefined,
@@ -33,7 +33,7 @@ describe('Pubsub subscriber client', () => {
         topic: 'topic2'
       }
     }, {
-      t: TOPICS.SUBSCRIBE,
+      t: COMMANDS.SUBSCRIBE,
       m: {
         id: 3,
         filter: 'x',
