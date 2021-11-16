@@ -1,5 +1,5 @@
 const { pause, newDummyChannel } = require('../common')
-const { TOPICS } = require('../../lib/constants')
+const { COMMANDS } = require('../../lib/constants')
 const dut = require('../../lib/brokers/pubsub')
 
 describe('Pubsub broker', () => {
@@ -18,21 +18,19 @@ describe('Pubsub broker', () => {
     cpub.on('data', (data) => {
       pubsubBoker.handleData(cpub, data)
     })
-    cpub.remote.writable.write({ t: 'topic1', m: 1 })
-    cpub.remote.writable.write({ t: 'topic2', m: 2 })
-    cpub.remote.writable.write({ t: 'topic2', m: 3 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 1 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic2', m: 2 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic2', m: 3 })
 
     csub1.on('data', (data) => {
       pubsubBoker.handleData(csub1, data)
     })
     csub1.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        filter: undefined,
-        offset: 0,
-        topic: 'topic1'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      filter: undefined,
+      offset: 0,
+      topic: 'topic1'
     })
     csub1.remote.readable.on('data', (data) => {
       received1.push(data)
@@ -42,21 +40,22 @@ describe('Pubsub broker', () => {
       pubsubBoker.handleData(csub2, data)
     })
     csub2.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        filter: undefined,
-        offset: 0,
-        topic: 'topic2'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      filter: undefined,
+      offset: 0,
+      topic: 'topic2'
     })
     csub2.remote.readable.on('data', (data) => {
       received2.push(data)
     })
 
     await pause(0)
-    expect(received1).toStrictEqual([{ t: 'topic1', o: 0, m: 1 }])
-    expect(received2).toStrictEqual([{ t: 'topic2', o: 0, m: 2 }, { t: 'topic2', o: 1, m: 3 }])
+    expect(received1).toStrictEqual([
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 0, m: 1 }])
+    expect(received2).toStrictEqual([
+      { c: COMMANDS.PUBLISH, t: 'topic2', o: 0, m: 2 },
+      { c: COMMANDS.PUBLISH, t: 'topic2', o: 1, m: 3 }])
   })
 
   test('publishes from offset', async () => {
@@ -74,25 +73,24 @@ describe('Pubsub broker', () => {
     pubsubBoker.registerChannel(csub1)
     pubsubBoker.registerChannel(cpub)
 
-    cpub.remote.writable.write({ t: 'topic1', m: 1 })
-    cpub.remote.writable.write({ t: 'topic1', m: 2 })
-    cpub.remote.writable.write({ t: 'topic1', m: 3 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 1 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 2 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 3 })
 
     csub1.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        filter: undefined,
-        offset: 2,
-        topic: 'topic1'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      filter: undefined,
+      offset: 2,
+      topic: 'topic1'
     })
     csub1.remote.readable.on('data', (data) => {
       received1.push(data)
     })
 
     await pause(0)
-    expect(received1).toStrictEqual([{ t: 'topic1', o: 2, m: 3 }])
+    expect(received1).toStrictEqual([
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 2, m: 3 }])
   })
 
   test('resubscribes', async () => {
@@ -111,32 +109,30 @@ describe('Pubsub broker', () => {
     pubsubBoker.registerChannel(cpub)
 
     csub1.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        offset: 2,
-        topic: 'topic1'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      offset: 2,
+      topic: 'topic1'
     })
     csub1.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        offset: 1,
-        topic: 'topic1'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      offset: 1,
+      topic: 'topic1'
     })
     csub1.remote.readable.on('data', (data) => {
       received1.push(data)
     })
 
-    cpub.remote.writable.write({ t: 'topic1', m: 1 })
-    cpub.remote.writable.write({ t: 'topic1', m: 2 })
-    cpub.remote.writable.write({ t: 'topic1', m: 3 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 1 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 2 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 3 })
 
     await pause(0)
     pubsubBoker.unregisterChannel(csub1)
-    expect(received1).toStrictEqual([{ t: 'topic1', o: 1, m: 2 }, { t: 'topic1', o: 2, m: 3 }])
+    expect(received1).toStrictEqual([
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 1, m: 2 },
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 2, m: 3 }])
   })
 
   test('unsubscribes', async () => {
@@ -155,30 +151,27 @@ describe('Pubsub broker', () => {
     pubsubBoker.registerChannel(cpub)
 
     csub1.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        offset: 0,
-        topic: 'topic1'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      offset: 0,
+      topic: 'topic1'
     })
     csub1.remote.readable.on('data', (data) => {
       received1.push(data)
     })
 
     cpub.remote.writable.write({ t: 'topic1', m: 1 })
-    await pause(0)
+    await pause(20)
     csub1.remote.writable.write({
-      t: COMMANDS.UNSUBSCRIBE,
-      m: {
-        topic: 'topic1'
-      }
+      c: COMMANDS.UNSUBSCRIBE,
+      topic: 'topic1'
     })
-    cpub.remote.writable.write({ t: 'topic1', m: 2 })
-    cpub.remote.writable.write({ t: 'topic1', m: 3 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 2 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 3 })
 
     await pause(0)
-    expect(received1).toStrictEqual([{ t: 'topic1', o: 0, m: 1 }])
+    expect(received1).toStrictEqual([
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 0, m: 1 }])
   })
 
   test('publishes when mutiple publishers', async () => {
@@ -200,26 +193,27 @@ describe('Pubsub broker', () => {
     pubsubBoker.registerChannel(csub1)
     pubsubBoker.registerChannel(cpub1)
 
-    cpub1.remote.writable.write({ t: 'topic1', m: 1 })
+    cpub1.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 1 })
     await pause(0)
-    cpub2.remote.writable.write({ t: 'topic1', m: 2 })
+    cpub2.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 2 })
     await pause(0)
-    cpub1.remote.writable.write({ t: 'topic1', m: 3 })
+    cpub1.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 3 })
 
     csub1.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        offset: 0,
-        topic: 'topic1'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      offset: 0,
+      topic: 'topic1'
     })
     csub1.remote.readable.on('data', (data) => {
       received1.push(data)
     })
 
     await pause(0)
-    expect(received1).toStrictEqual([{ t: 'topic1', o: 0, m: 1 }, { t: 'topic1', o: 1, m: 2 }, { t: 'topic1', o: 2, m: 3 }])
+    expect(received1).toStrictEqual([
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 0, m: 1 },
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 1, m: 2 },
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 2, m: 3 }])
   })
 
   test('filters', async () => {
@@ -234,41 +228,39 @@ describe('Pubsub broker', () => {
     cpub.on('data', (data) => {
       pubsubBoker.handleData(cpub, data)
     })
-    cpub.remote.writable.write({ t: 'topic1', m: 1 })
-    cpub.remote.writable.write({ t: 'topic1', m: 2 })
-    cpub.remote.writable.write({ t: 'topic1', m: 3 })
-    cpub.remote.writable.write({ t: 'topic1', m: 4 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 1 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 2 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 3 })
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 4 })
 
     csub.on('data', (data) => {
       pubsubBoker.handleData(csub, data)
     })
     csub.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        offset: 0,
-        topic: 'topic1',
-        filter: 'return m===2'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      offset: 0,
+      topic: 'topic1',
+      filter: (m) => m === 2
     })
     csub.remote.readable.on('data', (data) => {
       received.push(data)
     })
 
     csub.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 1,
-        offset: 0,
-        topic: 'topic1',
-        filter: 'return m===3'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 1,
+      offset: 0,
+      topic: 'topic1',
+      filter: (m) => m === 3
     })
 
     await pause(0)
     pubsubBoker.unsubscribe(csub, 'topic1')
     cpub.destroy()
-    expect(received).toStrictEqual([{ t: 'topic1', o: 1, m: 2 }, { t: 'topic1', o: 2, m: 3 }])
+    expect(received).toStrictEqual([
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 1, m: 2 },
+      { c: COMMANDS.PUBLISH, t: 'topic1', o: 2, m: 3 }])
   })
 
   test('publishes locally and subscribes', async () => {
@@ -288,12 +280,10 @@ describe('Pubsub broker', () => {
       pubsub.handleData(csub, data)
     })
     csub.remote.writable.write({
-      t: COMMANDS.SUBSCRIBE,
-      m: {
-        id: 0,
-        offset: 0,
-        topic: 'topic1'
-      }
+      c: COMMANDS.SUBSCRIBE,
+      id: 0,
+      offset: 0,
+      topic: 'topic1'
     })
     csub.remote.readable.on('data', (data) => {
       received2.push(data)
