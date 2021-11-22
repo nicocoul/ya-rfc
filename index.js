@@ -1,19 +1,24 @@
 'use strict'
 
-const clients = require('./lib/broker-clients')
+const clients = require('./lib/clients')
 const brokers = require('./lib/brokers')
 
 module.exports = {
-  // rpc: {
-  //   createServer: (options) => {
-  //     const tcpChannel = tcp.createChannel(options.host, options.port)
-  //     return rpcServer.create(tcpChannel, options.modulePath, options.affinity, options.workersCount)
-  //   },
-  //   createClient: (options) => {
-  //     const tcpChannel = tcp.createChannel(options.host, options.port)
-  //     return rpcClient.create(tcpChannel)
-  //   }
-  // },
+  rpc: {
+    broker: brokers.rpc,
+    client: {
+      net: (options) => {
+        const tcpChannel = clients.channels.net(options.host, options.port)
+        return clients.rpcClient(tcpChannel)
+      }
+    },
+    server: {
+      net: (connectOptions, modulePath, options) => {
+        const tcpChannel = clients.channels.net(connectOptions.host, connectOptions.port)
+        return clients.rpcServer(tcpChannel, modulePath, options)
+      }
+    }
+  },
   pubsub: {
     broker: brokers.pubsub,
     client: {

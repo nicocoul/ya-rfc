@@ -1,8 +1,8 @@
 const { pause, newAccumulator, newDummyChannel } = require('../common')
-const { TOPICS } = require('../../lib/constants')
-const dut = require('../../lib/broker-clients/pubsub')
+const { COMMANDS } = require('../../lib/constants')
+const dut = require('../../lib/clients/pubsub')
 
-describe('Pubsub subscriber client', () => {
+describe('Pubsub client', () => {
   test('writes subscriptions to remote', async () => {
     const channel = newDummyChannel()
     const accumulator = newAccumulator()

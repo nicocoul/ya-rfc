@@ -24,7 +24,10 @@
   },
   "license": "MIT",
   "scripts": {
-    "test": "jest --detectOpenHandles",
+    "test": "jest",
+    "test:detect": "jest --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --collectCoverage",
     "lint": "eslint",
     "lint:fix": "eslint --ext .js --fix"
   },

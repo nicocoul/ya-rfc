@@ -160,8 +160,8 @@ describe('Pubsub broker', () => {
       received1.push(data)
     })
 
-    cpub.remote.writable.write({ t: 'topic1', m: 1 })
-    await pause(20)
+    cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 1 })
+    await pause(10)
     csub1.remote.writable.write({
       c: COMMANDS.UNSUBSCRIBE,
       topic: 'topic1'
@@ -169,7 +169,7 @@ describe('Pubsub broker', () => {
     cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 2 })
     cpub.remote.writable.write({ c: COMMANDS.PUBLISH, t: 'topic1', m: 3 })
 
-    await pause(0)
+    await pause(10)
     expect(received1).toStrictEqual([
       { c: COMMANDS.PUBLISH, t: 'topic1', o: 0, m: 1 }])
   })
