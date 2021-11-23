@@ -1,21 +1,20 @@
 const net = require('net')
 const { pubsub, plugins } = require('../index.js')
 
-const yapsBroker = pubsub.broker()
-const server = net.Server()
-yapsBroker.plug(plugins.broker.net(server))
-server.listen(8000)
-yapsBroker.publish('some-topic', 'hello')
+const broker = pubsub.broker()
+broker.plug(plugins.broker.net(net.Server().listen(8000)))
 
-const yapsClient1 = pubsub.client.net({ host: 'localhost', port: 8000 })
-const yapsClient2 = pubsub.client.net({ host: 'localhost', port: 8000 })
+broker.publish('some-topic', 'hello')
 
-yapsClient1.publish('some-topic', { hello: 'world1' })
+const client1 = pubsub.client.net({ host: 'localhost', port: 8000 })
+const client2 = pubsub.client.net({ host: 'localhost', port: 8000 })
 
-yapsClient2.subscribe('some-topic', (message) => {
+client1.publish('some-topic', { hello: 'world1' })
+
+client2.subscribe('some-topic', (message) => {
   console.log(message)
 })
 
 setTimeout(() => {
-  yapsClient1.publish('some-topic', { hello: 'world2' })
+  client1.publish('some-topic', { hello: 'world2' })
 }, 50)

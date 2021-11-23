@@ -1,17 +1,17 @@
 const { pubsub } = require('../index.js')
 
-const yaps = pubsub.broker()
+const broker = pubsub.broker()
 
-yaps.publish('some-topic', 'hello')
+broker.publish('some-topic', 'hello')
 
-yaps.subscribe('some-topic', (message) => {
+broker.subscribe('some-topic', (message) => {
   console.log('received from first subscriber', message)
 })
 
-yaps.subscribe('some-topic', (message) => {
+broker.subscribe('some-topic', (message) => {
   console.log('received from second subscriber', message)
 })
 
 setTimeout(() => {
-  yaps.publish('some-topic', { hello: 'world2' })
+  broker.publish('some-topic', { hello: 'world2' })
 }, 50)
