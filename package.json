@@ -1,6 +1,6 @@
 {
   "name": "yaps-node",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
@@ -10,6 +10,7 @@
     "socket",
     "tcp",
     "tls",
+    "websocket",
     "networking",
     "realtime",
     "server",
