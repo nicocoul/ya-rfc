@@ -19,6 +19,9 @@ rpcClient.execute('count', [10000], (err, data) => {
   }
 }, {
   onProgress: (progress) => {
-    console.log(progress)
+    console.log('progress', progress)
+  },
+  onStatus: (status) => {
+    console.log('status', status)
   }
 })
