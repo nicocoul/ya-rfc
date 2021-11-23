@@ -1,0 +1,52 @@
+{
+  "name": "ya-rfc",
+  "version": "0.1.2",
+  "description": "",
+  "main": "index.js",
+  "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
+  "keywords": [
+    "rpc",
+    "rfc",
+    "socket",
+    "tcp",
+    "tls",
+    "websocket",
+    "networking",
+    "realtime",
+    "server",
+    "client"
+  ],
+  "homepage": "https://github.com/nicocoul/ya-rfc",
+  "bugs": {
+    "url": "https://github.com/nicocoul/ya-rfc/issues"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "jest",
+    "test:detect": "jest --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --collectCoverage",
+    "lint": "eslint",
+    "lint:fix": "eslint --ext .js --fix",
+    "render-readme": "node cli/render-readme.js"
+  },
+  "dependencies": {
+    "uuid": "^8.3.2",
+    "ya-common": "^0.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.3.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.1",
+    "jest": "^27.3.1",
+    "jest-cli": "^27.3.1",
+    "jest-junit": "^12.2.0",
+    "mustache": "^4.2.0",
+    "ws": "^8.3.0"
+  }
+}
