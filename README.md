@@ -1,4 +1,6 @@
-Yaps-node is a [topic-based](http://en.wikipedia.org/wiki/Publish–subscribe_pattern#Message_filtering) [publish/subscribe](http://en.wikipedia.org/wiki/Publish/subscribe) library for Node js.
+Ya Rfc (Remote Function Execution) is a [rpc](https://en.wikipedia.org/wiki/Remote_procedure_call) library for Node js.
+
+Works well with [ya-pubsub](https://www.npmjs.com/package/ya-pubsub).
 
 ### Key Features
 * asynchronous
@@ -6,89 +8,100 @@ Yaps-node is a [topic-based](http://en.wikipedia.org/wiki/Publish–subscribe_pa
 * designed for micro-services
 
 
-### Examples
-Publishing and subscribing locally (same process)
+### Basic Example
+Given a module accessible by the RFC server
 ```javascript
-const { pubsub } = require('../index.js')
+// procedures.js
 
-const broker = pubsub.broker()
-
-broker.publish('some-topic', 'hello')
-
-broker.subscribe('some-topic', (message) => {
-  console.log('received from first subscriber', message)
-})
-
-broker.subscribe('some-topic', (message) => {
-  console.log('received from second subscriber', message)
-})
-
-setTimeout(() => {
-  broker.publish('some-topic', { hello: 'world2' })
-}, 50)
+module.exports = {
+  count: (until, progress) => {
+    const x = parseInt(until / 10)
+    for (let i = 0; i < until; i++) {
+      if (i % x === 0) {
+        progress(`${i}/${until}`)
+      }
+    }
+    return until
+  }
+}
 
 ```
-Publishing and subscribing over tcp
+function 'count' can be executed remotely over tcp
 ```javascript
 const net = require('net')
-const { pubsub, plugins } = require('../index.js')
+const path = require('path')
+const ya = require('../index.js')
 
-const broker = pubsub.broker()
-broker.plug(plugins.broker.net(net.Server().listen(8000)))
+// Create broker a that forwards requests to servers
+// according to their CPU and memory usage.
+const broker = ya.broker()
+broker.plug(ya.plugins.net(net.Server().listen(8002)))
 
-broker.publish('some-topic', 'hello')
+// Server spawns worker processes at startup.
+// Round-robin scheduling is used to balance load over child processes
+const modulePath = path.join(__dirname, 'procedures.js')
+ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
+ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
 
-const client1 = pubsub.client.net({ host: 'localhost', port: 8000 })
-const client2 = pubsub.client.net({ host: 'localhost', port: 8000 })
-
-client1.publish('some-topic', { hello: 'world1' })
-
-client2.subscribe('some-topic', (message) => {
-  console.log(message)
+// execute function 'count' from a remote client
+const client = ya.client.net({ host: 'localhost', port: 8002 })
+client.execute('count', [10000], (err, data) => {
+  if (!err) {
+    console.log('result is', data)
+  }
+}, {
+  onProgress: (progress) => {
+    console.log('progress', progress)
+  },
+  onStatus: (status) => {
+    console.log('status', status)
+  }
 })
 
-setTimeout(() => {
-  client1.publish('some-topic', { hello: 'world2' })
-}, 50)
+/* output:
+status scheduled
+status started
+progress 0/10000
+progress 1000/10000
+progress 2000/10000
+progress 3000/10000
+progress 4000/10000
+progress 5000/10000
+progress 6000/10000
+progress 7000/10000
+progress 8000/10000
+progress 9000/10000
+result is 10000
+status end
+*/
 
 ```
-Publishing and subscribing over web sockets
+or over websockets
 ```javascript
 const { WebSocketServer } = require('ws')
-const { pubsub, plugins } = require('../index.js')
+const path = require('path')
+const ya = require('../index.js')
 
-const broker = pubsub.broker()
-broker.plug(plugins.broker.ws(new WebSocketServer({ port: 8001 })))
-broker.publish('some-topic', 'hello')
+const broker = ya.broker()
+broker.plug(ya.plugins.ws(new WebSocketServer({ port: 8004 })))
 
-const client1 = pubsub.client.ws({ host: 'localhost', port: 8001 })
-const client2 = pubsub.client.ws({ host: 'localhost', port: 8001 })
+const modulePath = path.join(__dirname, 'procedures.js')
+ya.server.ws({ host: 'localhost', port: 8004 }, modulePath)
 
-client2.publish('some-topic', { hello: 'world1' })
-
-client2.subscribe('some-topic', (message) => {
-  console.log(message)
+// execute procedure count from the client
+const rpcClient = ya.client.ws({ host: 'localhost', port: 8004 })
+rpcClient.execute('count', [10000], (err, data) => {
+  if (!err) {
+    console.log(data)
+  }
 })
 
-setTimeout(() => {
-  client1.publish('some-topic', { hello: 'world2' })
-}, 50)
+/* output:
+10000
+*/
 
 ```
-
-### Topic Filtering
-
 
 ## Versioning
 
 Yaps-node uses [Semantic Versioning](http://semver.org/) for predictable versioning.
-
-## Alternatives
-
-These are a few alternative projects that also implement topic based publish subscribe in JavaScript.
-
-* https://raw.githubusercontent.com/mroderick/PubSubJS/
-* http://www.joezimjs.com/projects/publish-subscribe-jquery-plugin/
-* http://amplifyjs.com/api/pubsub/
-* http://radio.uxder.com/ — oriented towards 'channels', free of dependencies
-* https://github.com/pmelander/Subtopic - supports vanilla, underscore, jQuery and is even available in NuGet

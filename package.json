@@ -1,12 +1,12 @@
 {
-  "name": "yaps-node",
-  "version": "0.2.0",
+  "name": "ya-rfc",
+  "version": "0.1.2",
   "description": "",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
   "keywords": [
     "rpc",
-    "pubsub",
+    "rfc",
     "socket",
     "tcp",
     "tls",
@@ -16,9 +16,9 @@
     "server",
     "client"
   ],
-  "homepage": "https://github.com/nicocoul/yaps-node",
+  "homepage": "https://github.com/nicocoul/ya-rfc",
   "bugs": {
-    "url": "https://github.com/nicocoul/yaps-node/issues"
+    "url": "https://github.com/nicocoul/ya-rfc/issues"
   },
   "directories": {
     "lib": "./lib"
@@ -34,19 +34,19 @@
     "render-readme": "node cli/render-readme.js"
   },
   "dependencies": {
-    "fast-safe-stringify": "^2.1.1",
     "uuid": "^8.3.2",
-    "ws": "^8.2.3"
+    "ya-common": "^0.1.2"
   },
   "devDependencies": {
-    "eslint": "^8.1.0",
+    "eslint": "^8.3.0",
     "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.1",
-    "jest": "^27.0.4",
-    "jest-cli": "^27.0.4",
+    "jest": "^27.3.1",
+    "jest-cli": "^27.3.1",
     "jest-junit": "^12.2.0",
-    "mustache": "^4.2.0"
+    "mustache": "^4.2.0",
+    "ws": "^8.3.0"
   }
 }

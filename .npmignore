@@ -10,3 +10,6 @@ build/
 tests/
 tmp/
 obsolete/
+cli/
+coverage/
+*.tpl

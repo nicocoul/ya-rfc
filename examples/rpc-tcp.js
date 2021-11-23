@@ -1,19 +1,21 @@
 const net = require('net')
 const path = require('path')
-const { rpc, plugins } = require('../index.js')
+const ya = require('../index.js')
 
-// create broker
-const broker = rpc.broker()
-broker.plug(plugins.broker.net(net.Server().listen(8002)))
+// Create broker a that forwards requests to servers
+// according to their CPU and memory usage.
+const broker = ya.broker()
+broker.plug(ya.plugins.net(net.Server().listen(8002)))
 
-// create rpc servers
+// Server spawns worker processes at startup.
+// Round-robin scheduling is used to balance load over child processes
 const modulePath = path.join(__dirname, 'procedures.js')
-rpc.server.net({ host: 'localhost', port: 8002 }, modulePath)
-rpc.server.net({ host: 'localhost', port: 8002 }, modulePath)
+ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
+ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
 
-// execute procedure count from the client
-const rpcClient = rpc.client.net({ host: 'localhost', port: 8002 })
-rpcClient.execute('count', [10000], (err, data) => {
+// execute function 'count' from a remote client
+const client = ya.client.net({ host: 'localhost', port: 8002 })
+client.execute('count', [10000], (err, data) => {
   if (!err) {
     console.log('result is', data)
   }
@@ -25,3 +27,20 @@ rpcClient.execute('count', [10000], (err, data) => {
     console.log('status', status)
   }
 })
+
+/* output:
+status scheduled
+status started
+progress 0/10000
+progress 1000/10000
+progress 2000/10000
+progress 3000/10000
+progress 4000/10000
+progress 5000/10000
+progress 6000/10000
+progress 7000/10000
+progress 8000/10000
+progress 9000/10000
+result is 10000
+status end
+*/
