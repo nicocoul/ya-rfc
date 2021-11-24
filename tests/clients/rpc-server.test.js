@@ -24,8 +24,7 @@ describe('Rcp server', () => {
     channel.remote.writable.write({ c: COMMANDS.RPC_EXECUTE, id: 1, procedure: 'funcWithResult', args: [10] })
 
     await pause(500)
-    server.destroy()
-    // channel.destroy()
+    server.kill()
     expect(result).toStrictEqual({ c: COMMANDS.RPC_EXECUTE, id: 1, result: 10 })
     expect(error).toBeUndefined()
   })
@@ -46,8 +45,7 @@ describe('Rcp server', () => {
     channel.remote.writable.write({ c: COMMANDS.RPC_EXECUTE, id: 1, procedure: 'no func', args: [10] })
 
     await pause(500)
-    server.destroy()
-    // channel.destroy()
+    server.kill()
     expect(result).toBeUndefined()
     expect(error).toBeDefined()
   })
@@ -68,8 +66,7 @@ describe('Rcp server', () => {
     channel.remote.writable.write({ c: COMMANDS.RPC_EXECUTE, id: 1, procedure: 'functThatThrows', args: [10] })
 
     await pause(500)
-    server.destroy()
-    // channel.destroy()
+    server.kill()
     expect(result).toBeUndefined()
     expect(error).toBeDefined()
   })
@@ -95,8 +92,7 @@ describe('Rcp server', () => {
     channel.remote.writable.write({ c: COMMANDS.RPC_EXECUTE, id: 1, procedure: 'funcWithProgress' })
 
     await pause(500)
-    server.destroy()
-    // channel.destroy()
+    server.kill()
     expect(result).toBeDefined()
     expect(error).toBeUndefined()
     expect(progress).toBeDefined()
