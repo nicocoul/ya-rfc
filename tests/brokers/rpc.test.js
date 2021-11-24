@@ -1,7 +1,8 @@
 const path = require('path')
 const { pause, newDummyChannel } = require('../common')
-const { duplexify } = require('../../lib/common')
-const { COMMANDS } = require('../../lib/constants')
+const yac = require('ya-common')
+const { COMMANDS } = yac.constants
+const { duplexify } = yac.common
 const rpcBroker = require('../../lib/brokers/rpc')
 const rpcServer = require('../../lib/clients/rpc-server')
 
@@ -21,7 +22,7 @@ describe('Rpc broker', () => {
       received.push(data)
     })
     channelBroker.write({ c: COMMANDS.RPC_EXECUTE, id: 1, procedure: 'funcWithResult', args: [10] })
-    await pause(200)
+    await pause(500)
     server.destroy()
     expect(received.find(r => r.result !== undefined)).toStrictEqual({ c: COMMANDS.RPC_EXECUTE, id: 1, result: 10 })
     expect(received.find(r => r.error !== undefined)).toBeUndefined()

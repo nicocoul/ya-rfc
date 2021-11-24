@@ -4,24 +4,25 @@ const { pause } = require('../common')
 const rpcBroker = require('../../lib/brokers/rpc')
 const rpcServer = require('../../lib/clients/rpc-server')
 const rpcClient = require('../../lib/clients/rpc-client')
-const netChannel = require('../../lib/clients/channels/net')
-const netPlugin = require('../../lib/brokers/plugins/net')
+const yac = require('ya-common')
+const netPlugin = yac.plugins.net
+const netChannel = yac.channels.net
 
-//const PORT = 8080
+// const PORT = 8080
 
 function newServer (port) {
-  const channel = netChannel.create('localhost', port)
+  const channel = netChannel('localhost', port)
   return rpcServer.create(channel, path.join(__dirname, 'fixtures', 'rpc-module'))
 }
 
 function newClient (port) {
-  const channel = netChannel.create('localhost', port)
+  const channel = netChannel('localhost', port)
   return rpcClient.create(channel)
 }
 
 function newBroker (port) {
   const server = net.Server()
-  const plugin = netPlugin.create(server)
+  const plugin = netPlugin(server)
   const result = rpcBroker.create()
   server.listen(port)
   result.plug(plugin)
@@ -87,6 +88,38 @@ describe('Rpc TCP stack', () => {
     expect(result).toStrictEqual(null)
   })
 
+  test('executes with status', async () => {
+    const rpcServer = newServer(8081)
+    const rpcBroker = newBroker(8081)
+    const client = newClient(8081)
+
+    let result
+    let error
+    const statuses = []
+    let count = 0
+    client.execute('funcWithProgress', [], (err, res) => {
+      count++
+      if (!err) {
+        result = res
+      } else {
+        error = err
+      }
+    }, {
+      onStatus: s => {
+        statuses.push(s)
+      }
+    })
+
+    await pause(500)
+    rpcServer.destroy()
+    rpcBroker.destroy()
+    client.destroy()
+    expect(error).toBeUndefined()
+    expect(count).toStrictEqual(1)
+    expect(result).toStrictEqual(null)
+    expect(statuses).toStrictEqual(['scheduled', 'started', 'end'])
+  })
+
   test('handles errors', async () => {
     const rpcServer = newServer(8082)
     const rpcBroker = newBroker(8082)
@@ -113,11 +146,11 @@ describe('Rpc TCP stack', () => {
     expect(count).toStrictEqual(1)
   })
 
-  test('executes 1000', async () => {
+  test('executes 1000 in less than 500ms', async () => {
     const rpcServer = newServer(8083)
     const rpcBroker = newBroker(8083)
     const client = newClient(8083)
-    const eCount = 300
+    const eCount = 1000
     let result
     let error
     let count = 0

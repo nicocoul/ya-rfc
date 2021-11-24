@@ -1,8 +1,9 @@
 const path = require('path')
 const { pause, newDummyChannel } = require('../common')
-const { COMMANDS } = require('../../lib/constants')
+const yac = require('ya-common')
+const { COMMANDS } = yac.constants
 const rpc = require('../../lib/clients/rpc-server')
-const logger = require('../../lib/logger')(__filename)
+const logger = yac.logger(__filename)
 
 const modulePath = path.join(__dirname, 'fixtures', 'rpc-module')
 

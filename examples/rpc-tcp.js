@@ -8,7 +8,7 @@ const broker = ya.broker()
 broker.plug(ya.plugins.net(net.Server().listen(8002)))
 
 // Server spawns worker processes at startup.
-// Round-robin scheduling is used to balance load over child processes
+// Round-robin scheduling is used to balance load over worker processes.
 const modulePath = path.join(__dirname, 'procedures.js')
 ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
 ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
@@ -41,6 +41,6 @@ progress 6000/10000
 progress 7000/10000
 progress 8000/10000
 progress 9000/10000
-result is 10000
 status end
+result is 10000
 */

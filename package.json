@@ -25,10 +25,10 @@
   },
   "license": "MIT",
   "scripts": {
-    "test": "jest",
-    "test:detect": "jest --detectOpenHandles",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --collectCoverage",
+    "test": "jest --runInBand",
+    "test:detect": "jest --runInBand --detectOpenHandles",
+    "test:watch": "jest --runInBand --watch",
+    "test:coverage": "jest --runInBand --collectCoverage",
     "lint": "eslint",
     "lint:fix": "eslint --ext .js --fix",
     "render-readme": "node cli/render-readme.js"

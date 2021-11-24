@@ -22,8 +22,8 @@ describe('Rpc Worker', () => {
       }
     })
     worker.send({ id: 1, procedure: 'funcWithResult', args: [10] })
-    await pause(1000)
-    worker.kill('SIGINT')
+    await pause(500)
+    worker.kill()
     expect(result).toStrictEqual(10)
     expect(error).toBeUndefined()
   })
@@ -41,8 +41,8 @@ describe('Rpc Worker', () => {
       }
     })
     worker.send({ id: 1, procedure: 'asyncFunc', args: [10] })
-    await pause(2000)
-    worker.kill('SIGINT')
+    await pause(500)
+    worker.kill()
     expect(error).toBeUndefined()
     expect(result).toStrictEqual(10)
   })
@@ -60,8 +60,8 @@ describe('Rpc Worker', () => {
       }
     })
     worker.send({ id: 1, procedure: 'functWithoutResult', args: [10] })
-    await pause(2000)
-    worker.kill('SIGINT')
+    await pause(500)
+    worker.kill()
     expect(error).toBeUndefined()
     expect(result).toStrictEqual('null')
   })
@@ -75,8 +75,8 @@ describe('Rpc Worker', () => {
       }
     })
     worker.send({ id: 1, procedure: 'non existing function', args: [10] })
-    await pause(2000)
-    worker.kill('SIGINT')
+    await pause(500)
+    worker.kill()
     expect(error).toBeDefined()
   })
 
@@ -89,8 +89,8 @@ describe('Rpc Worker', () => {
       }
     })
     worker.send({ id: 1, procedure: 'functThatThrows', args: [10] })
-    await pause(2000)
-    worker.kill('SIGINT')
+    await pause(500)
+    worker.kill()
     expect(error).toBeDefined()
   })
 
@@ -111,8 +111,8 @@ describe('Rpc Worker', () => {
       }
     })
     worker.send({ id: 1, procedure: 'funcWithProgress' })
-    await pause(2000)
-    worker.kill('SIGINT')
+    await pause(500)
+    worker.kill()
     expect(error).toBeUndefined()
     expect(result).toBeDefined()
     expect(progress).toBeDefined()
