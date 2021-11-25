@@ -7,16 +7,16 @@ sequenceDiagram
     participant S1W2 as server1/worker2
     S1-->>B: {cpu:0.3, mem:0.60}
     S2-->>B: {cpu:0.33, mem:0.60}
-    C->>B: execute
+    C->>B: execute {function:'some-function', args:['some-arg']}
     activate B
     note over B: select sever with minimum load
-    B->>S1: execute
+    B->>S1: execute {function:'some-function', args:['some-arg']}
     activate S1
     B-->>C: {status: scheduled}
     deactivate B
     note over S1: wait for enough free CPU & memory
     note over S1: select worker (round robin)
-    S1->>S1W1: execute
+    S1->>S1W1: execute {function:'some-function', args:['some-arg']}
     activate S1W1
     S1-->>C: {status: started}
     deactivate S1
