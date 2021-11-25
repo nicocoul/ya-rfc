@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant C as client
+    participant B as broker
+    participant S1 as server1
+    participant S2 as server2
+    participant S1W1 as server1/worker1
+    participant S1W2 as server1/worker2
+    S1-->>B: {cpu:0.3, mem:0.60}
+    S2-->>B: {cpu:0.33, mem:0.60}
+    C->>B: execute
+    activate B
+    note over B: select sever with minimum load
+    B->>S1: execute
+    activate S1
+    B-->>C: {status: scheduled}
+    deactivate B
+    note over S1: wait for enough free CPU & memory
+    note over S1: select worker (round robin)
+    S1->>S1W1: execute
+    activate S1W1
+    S1-->>C: {status: started}
+    deactivate S1
+    S1W1-->>C: {progress: '50%'}
+    S1W1->>S1: {resullt: some result}
+    deactivate S1W1
+    activate S1
+    S1-->>C: {status: 'end'}
+    S1->>C: {result: 'some result'}
+    deactivate S1

@@ -12,4 +12,6 @@ tmp/
 obsolete/
 cli/
 coverage/
+img/
+mrd/
 *.tpl
