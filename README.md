@@ -5,6 +5,8 @@ Ya-rpc anables to run functions on remote machines within a distributed system w
 
 It provides an easy way to implement performance-critical applications by parallel execution on machines and processes.
 
+![basic execution flow](https://github.com/nicocoul/ya-rfc/blob/dev/img/arch.png)
+
 ### Key Features
 * blazing fast
 * integrates well with [ya-pubsub](https://www.npmjs.com/package/ya-pubsub)
@@ -43,14 +45,14 @@ const ya = require('../index.js')
 const broker = ya.broker()
 broker.plug(ya.plugins.net(net.Server().listen(8002)))
 
-// Server spawns worker processes at startup.
+// Create servers that spawns worker processes at startup.
 // Round-robin scheduling is used to balance load over worker processes.
 const modulePath = path.join(__dirname, 'procedures.js')
 ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
 ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
 
-// execute function 'count' from a remote client
 const client = ya.client.net({ host: 'localhost', port: 8002 })
+// execute function 'count' from a remote client
 client.execute('count', [10000], (err, data) => {
   if (!err) {
     console.log('result is', data)

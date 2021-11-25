@@ -1,0 +1,25 @@
+flowchart LR
+    s1m[main process]
+    s1w1[worker process1]
+    s1w2[worker process2]
+    s2m[main process]
+    s2w1[worker process1]
+    s2w2[worker process2]
+    c1[client1]
+    c2[client2]
+    b[broker]
+    c1-- TCP/WS ---b
+    c2-- TCP/WS ---b
+    b-- TCP/WS ---s1m
+    b-- TCP/WS ---s2m
+    subgraph s1[server1]
+        s1m
+        s1m-- IPC ---s1w1
+        s1m-- IPC ---s1w2
+    end
+    subgraph s2[server2]
+        s2m
+        s2m-- IPC ---s2w1
+        s2m-- IPC ---s2w2
+    end
+
