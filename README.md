@@ -1,12 +1,14 @@
 Ya Rfc (Remote Function Execution) is a [rpc](https://en.wikipedia.org/wiki/Remote_procedure_call) library for Node js.
 
-Works well with [ya-pubsub](https://www.npmjs.com/package/ya-pubsub).
+Integrates well with [ya-pubsub](https://www.npmjs.com/package/ya-pubsub).
 
 ### Key Features
 * asynchronous
 * embeddable
 * designed for micro-services
 
+### Execution Flow
+![basic execution flow](https://github.com/nicocoul/ya-rfc/blob/dev/img/basicExecFlow.png)
 
 ### Basic Example
 Given a module accessible by the RFC server
@@ -38,7 +40,7 @@ const broker = ya.broker()
 broker.plug(ya.plugins.net(net.Server().listen(8002)))
 
 // Server spawns worker processes at startup.
-// Round-robin scheduling is used to balance load over child processes
+// Round-robin scheduling is used to balance load over worker processes.
 const modulePath = path.join(__dirname, 'procedures.js')
 ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
 ya.server.net({ host: 'localhost', port: 8002 }, modulePath)
@@ -71,8 +73,8 @@ progress 6000/10000
 progress 7000/10000
 progress 8000/10000
 progress 9000/10000
-result is 10000
 status end
+result is 10000
 */
 
 ```

@@ -1,6 +1,6 @@
 {
   "name": "ya-rfc",
-  "version": "0.1.2",
+  "version": "0.1.8",
   "description": "",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
@@ -25,17 +25,17 @@
   },
   "license": "MIT",
   "scripts": {
-    "test": "jest",
-    "test:detect": "jest --detectOpenHandles",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --collectCoverage",
+    "test": "jest --runInBand",
+    "test:detect": "jest --runInBand --detectOpenHandles",
+    "test:watch": "jest --runInBand --watch",
+    "test:coverage": "jest --runInBand --collectCoverage",
     "lint": "eslint",
     "lint:fix": "eslint --ext .js --fix",
     "render-readme": "node cli/render-readme.js"
   },
   "dependencies": {
     "uuid": "^8.3.2",
-    "ya-common": "^0.1.2"
+    "ya-common": "^0.1.6"
   },
   "devDependencies": {
     "eslint": "^8.3.0",
