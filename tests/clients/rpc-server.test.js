@@ -5,7 +5,7 @@ const { COMMANDS } = yac.constants
 const rpc = require('../../lib/clients/rpc-server')
 const logger = yac.logger(__filename)
 
-const modulePath = path.join(__dirname, 'fixtures', 'rpc-module')
+const modulePath = path.join(__dirname, '..', 'fixtures', 'rpc-module')
 
 describe('Rcp server', () => {
   test('executes a function that returns a value', async () => {

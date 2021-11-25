@@ -12,7 +12,7 @@ const netChannel = yac.channels.net
 
 function newServer (port) {
   const channel = netChannel('localhost', port)
-  return rpcServer.create(channel, path.join(__dirname, 'fixtures', 'rpc-module'))
+  return rpcServer.create(channel, path.join(__dirname, '..', 'fixtures', 'rpc-module'))
 }
 
 function newClient (port) {

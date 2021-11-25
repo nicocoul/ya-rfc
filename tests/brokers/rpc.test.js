@@ -7,7 +7,7 @@ const rpcBroker = require('../../lib/brokers/rpc')
 const rpcServer = require('../../lib/clients/rpc-server')
 
 function newRpcServer (channel) {
-  return rpcServer.create(channel, path.join(__dirname, 'fixtures', 'rpc-module'))
+  return rpcServer.create(channel, path.join(__dirname, '..', 'fixtures', 'rpc-module'))
 }
 
 describe('Rpc broker', () => {
