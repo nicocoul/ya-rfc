@@ -33,6 +33,6 @@ fs.readdirSync(mrdPath).forEach(entry => {
   convert(path.join(mrdPath, entry), path.join(imgPath, `${path.parse(entry).name}.png`))
 })
 
-const template = fs.readFileSync(path.join(__dirname, '..', 'README.md.tpl'), { encoding: 'utf8' })
+const template = fs.readFileSync(path.join(__dirname, 'README.md.tpl'), { encoding: 'utf8' })
 const result = mustache.render(template, { examples })
 fs.writeFileSync(path.join(__dirname, '..', 'README.md'), result, { encoding: 'utf8' })

@@ -4,7 +4,7 @@ const path = require('path')
 
 function createWorker () {
   const result = fork(path.join(__dirname, '..', '..', 'lib', 'clients', 'rpc-worker.js'))
-  result.send({ modulePath: path.join(__dirname, 'fixtures', 'rpc-module') })
+  result.send({ modulePath: path.join(__dirname, '..', 'fixtures', 'rpc-module') })
   return result
 }
 

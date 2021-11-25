@@ -1,6 +1,6 @@
 .npmignore
 .gitignore
-.eslintrc
+.eslintrc.js
 .git/
 .lock-*
 node_modules/
@@ -14,4 +14,4 @@ cli/
 coverage/
 img/
 mrd/
-*.tpl
+.github/
