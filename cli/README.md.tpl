@@ -5,6 +5,8 @@ Ya-rpc anables to run functions on remote machines within a distributed system w
 
 It provides an easy way to implement performance-critical applications by parallel execution on machines and processes.
 
+![basic execution flow](https://github.com/nicocoul/ya-rfc/blob/dev/img/arch.png)
+
 ### Key Features
 * blazing fast
 * integrates well with [ya-pubsub](https://www.npmjs.com/package/ya-pubsub)
