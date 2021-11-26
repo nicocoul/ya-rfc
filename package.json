@@ -1,7 +1,7 @@
 {
   "name": "ya-rfc",
   "version": "0.1.10",
-  "description": "",
+  "description": "Yet Another Remote Function Call library for Node js",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
   "keywords": [
@@ -17,6 +17,10 @@
     "client"
   ],
   "homepage": "https://github.com/nicocoul/ya-rfc",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicocoul/ya-rfc.git"
+  },
   "bugs": {
     "url": "https://github.com/nicocoul/ya-rfc/issues"
   },
