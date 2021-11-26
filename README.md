@@ -1,4 +1,5 @@
-# ya-rfc [![npm version](https://badge.fury.io/js/ya-rfc.svg)](http://badge.fury.io/js/ya-rfc) [![license](https://img.shields.io/npm/l/ya-rfc.svg)](http://badge.fury.io/js/ya-rfc) [![test](https://github.com/nicocoul/ya-rfc/actions/workflows/test.yml/badge.svg)](https://github.com/nicocoul/ya-rfc/actions/workflows/test.yml) [![Coverage](https://coveralls.io/repos/github/nicocoul/ya-rfc/badge.svg?branch=main)](https://coveralls.io/github/nicocoul/ya-rfc?branch=main) [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/nicocoul/ya-rfc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nicocoul/ya-rfc/context:javascript)
+# ya-rfc 
+[![npm version](https://badge.fury.io/js/ya-rfc.svg)](http://badge.fury.io/js/ya-rfc) [![license](https://img.shields.io/npm/l/ya-rfc.svg)](http://badge.fury.io/js/ya-rfc) [![test](https://github.com/nicocoul/ya-rfc/actions/workflows/test.yml/badge.svg)](https://github.com/nicocoul/ya-rfc/actions/workflows/test.yml) [![Coverage Status](https://coveralls.io/repos/github/nicocoul/ya-rfc/badge.svg?branch=main)](https://coveralls.io/github/nicocoul/ya-rfc?branch=main) [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/nicocoul/ya-rfc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/nicocoul/ya-rfc/context:javascript)
 Yet Another [Remote Function Call](https://en.wikipedia.org/wiki/Remote_procedure_call) library for Node js.
 
 Ya-rpc anables to run functions on remote machines within a distributed system without worrying about network messaging & load balancing.
@@ -96,13 +97,21 @@ broker.plug(ya.plugins.ws(new WebSocketServer({ port: 8004 })))
 const modulePath = path.join(__dirname, 'procedures.js')
 ya.server.ws({ host: 'localhost', port: 8004 }, modulePath)
 
-// execute procedure count from the client
 const rpcClient = ya.client.ws({ host: 'localhost', port: 8004 })
-rpcClient.execute('count', [10000], (err, data) => {
-  if (!err) {
-    console.log(data)
-  }
-})
+// execute procedure count from the client
+// rpcClient.execute('count', [10000], (err, data) => {
+//   if (!err) {
+//     console.log(data)
+//   }
+// })
+
+rpcClient.remote.count(100, { onProgress: console.log, onStatus: console.log })
+  .then(result => {
+    console.log(result)
+  })
+  .catch(error => {
+    console.error(error)
+  })
 
 /* output:
 10000
