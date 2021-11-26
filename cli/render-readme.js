@@ -6,7 +6,6 @@ const https = require('https')
 
 function convert (mermaidPath, pngPath) {
   const utf8 = fs.readFileSync(mermaidPath, { encoding: 'utf8' })
-  //const encoded = encodeURIComponent(utf8)
   const base64 = Buffer.from(utf8).toString('base64')
   const ws = fs.createWriteStream(pngPath)
   const req = https.request({ hostname: 'mermaid.ink', path: `/img/${base64}`, method: 'GET', port: 443 }, res => {
