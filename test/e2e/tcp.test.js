@@ -8,8 +8,6 @@ const yac = require('ya-common')
 const netPlugin = yac.plugins.net
 const netChannel = yac.channels.net
 
-// const PORT = 8080
-
 function newServer (port) {
   const channel = netChannel('localhost', port)
   return rpcServer.create(channel, path.join(__dirname, '..', 'fixtures', 'rpc-module'))
@@ -29,8 +27,8 @@ function newBroker (port) {
   return result
 }
 
-describe('Rpc TCP stack', () => {
-  test('executes', async () => {
+describe('TCP stack', () => {
+  test('executes afunction that has a return value', async () => {
     const rpcServer = newServer(8080)
     const rpcBroker = newBroker(8080)
     const client = newClient(8080)
@@ -38,20 +36,44 @@ describe('Rpc TCP stack', () => {
     let result
     let error
     let count = 0
-    client.execute('funcWithResult', [10], (err, res) => {
-      count++
-      if (!err) {
+    await client.remote.funcWithResult(10)
+      .then(res => {
+        count++
         result = res
-      } else {
+      })
+      .catch(err => {
+        count++
         error = err
-      }
-    })
-
-    await pause(300)
+      })
     rpcServer.kill()
     rpcBroker.kill()
     client.kill()
     expect(result).toStrictEqual(10)
+    expect(count).toStrictEqual(1)
+    expect(error).toBeUndefined()
+  })
+
+  test('executes a function that has no return value', async () => {
+    const rpcServer = newServer(8080)
+    const rpcBroker = newBroker(8080)
+    const client = newClient(8080)
+
+    let result
+    let error
+    let count = 0
+    await client.remote.functWithoutResult(10)
+      .then(res => {
+        count++
+        result = res
+      })
+      .catch(err => {
+        count++
+        error = err
+      })
+    rpcServer.kill()
+    rpcBroker.kill()
+    client.kill()
+    expect(result).toBeUndefined()
     expect(count).toStrictEqual(1)
     expect(error).toBeUndefined()
   })
@@ -65,27 +87,22 @@ describe('Rpc TCP stack', () => {
     let error
     const progress = []
     let count = 0
-    client.execute('funcWithProgress', [], (err, res) => {
-      count++
-      if (!err) {
+    await client.remote.funcWithProgress({ onProgress: p => progress.push(p) })
+      .then(res => {
+        count++
         result = res
-      } else {
+      })
+      .catch(err => {
+        count++
         error = err
-      }
-    }, {
-      onProgress: p => {
-        progress.push(p)
-      }
-    })
-
-    await pause(300)
+      })
     rpcServer.kill()
     rpcBroker.kill()
     client.kill()
     expect(error).toBeUndefined()
     expect(count).toStrictEqual(1)
     expect(progress.find(p => p === 'done')).toBeDefined()
-    expect(result).toStrictEqual(null)
+    expect(result).toBeUndefined()
   })
 
   test('executes with status', async () => {
@@ -97,26 +114,21 @@ describe('Rpc TCP stack', () => {
     let error
     const statuses = []
     let count = 0
-    client.execute('funcWithProgress', [], (err, res) => {
-      count++
-      if (!err) {
+    await client.remote.funcWithProgress({ onStatus: p => statuses.push(p) })
+      .then(res => {
+        count++
         result = res
-      } else {
+      })
+      .catch(err => {
+        count++
         error = err
-      }
-    }, {
-      onStatus: s => {
-        statuses.push(s)
-      }
-    })
-
-    await pause(500)
+      })
     rpcServer.kill()
     rpcBroker.kill()
     client.kill()
     expect(error).toBeUndefined()
     expect(count).toStrictEqual(1)
-    expect(result).toStrictEqual(null)
+    expect(result).toBeUndefined()
     expect(statuses).toStrictEqual(['scheduled', 'started', 'end'])
   })
 
@@ -128,16 +140,16 @@ describe('Rpc TCP stack', () => {
     let result
     let error
     let count = 0
-    client.execute('functThatThrows', [], (err, res) => {
-      count++
-      if (!err) {
+    await client.remote.functThatThrows()
+      .then(res => {
+        count++
         result = res
-      } else {
+      })
+      .catch(err => {
+        count++
         error = err
-      }
-    })
+      })
 
-    await pause(300)
     rpcServer.kill()
     rpcBroker.kill()
     client.kill()
@@ -154,16 +166,17 @@ describe('Rpc TCP stack', () => {
     let result
     let error
     let count = 0
-    await pause(500)
+    await pause(200)
     for (let i = 0; i < eCount; i++) {
-      client.execute('funcWithResult', [10], (err, res) => {
-        count++
-        if (!err) {
+      client.remote.funcWithResult(10)
+        .then(res => {
+          count++
           result = res
-        } else {
+        })
+        .catch(err => {
+          count++
           error = err
-        }
-      })
+        })
     }
     await pause(500)
     rpcServer.kill()
@@ -171,6 +184,58 @@ describe('Rpc TCP stack', () => {
     client.kill()
     expect(result).toStrictEqual(10)
     expect(count).toStrictEqual(eCount)
+    expect(error).toBeUndefined()
+  })
+
+  test('executes when multiple servers', async () => {
+    const rpcServer1 = newServer(8080)
+    const rpcServer2 = newServer(8080)
+    const rpcBroker = newBroker(8080)
+    const client = newClient(8080)
+    await pause(300)
+    let result
+    let error
+    let count = 0
+    await client.remote.funcWithResult(10)
+      .then(res => {
+        count++
+        result = res
+      })
+      .catch(err => {
+        count++
+        error = err
+      })
+    rpcServer1.kill()
+    rpcServer2.kill()
+    rpcBroker.kill()
+    client.kill()
+    expect(result).toStrictEqual(10)
+    expect(count).toStrictEqual(1)
+    expect(error).toBeUndefined()
+  })
+
+  test('executes when request is made before any server is started', async () => {
+    const rpcBroker = newBroker(8080)
+    const client = newClient(8080)
+    let result
+    let error
+    let count = 0
+    client.remote.funcWithResult(10)
+      .then(res => {
+        count++
+        result = res
+      })
+      .catch(err => {
+        count++
+        error = err
+      })
+    const rpcServer = newServer(8080)
+    await pause(300)
+    rpcServer.kill()
+    rpcBroker.kill()
+    client.kill()
+    expect(result).toStrictEqual(10)
+    expect(count).toStrictEqual(1)
     expect(error).toBeUndefined()
   })
 })

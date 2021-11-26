@@ -7,7 +7,7 @@ const logger = yac.logger(__filename)
 
 const modulePath = path.join(__dirname, '..', 'fixtures', 'rpc-module')
 
-describe('Rcp server', () => {
+describe('server', () => {
   test('executes a function that returns a value', async () => {
     const channel = newDummyChannel()
     const server = rpc.create(channel, modulePath)

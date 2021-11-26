@@ -8,7 +8,7 @@ function createWorker () {
   return result
 }
 
-describe('Rpc Worker', () => {
+describe('worker', () => {
   test('executes a function that returns a value', async () => {
     const worker = createWorker()
     let result
