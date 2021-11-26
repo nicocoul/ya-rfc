@@ -1,6 +1,6 @@
 {
   "name": "ya-rfc",
-  "version": "0.1.10",
+  "version": "1.0.0",
   "description": "Yet Another Remote Function Call library for Node js",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
