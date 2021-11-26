@@ -2,7 +2,6 @@
 module.exports = {
   funcWithResult: (a) => a,
   funcWithProgress: (onProgress) => {
-    console.log('on', onProgress)
     onProgress('done')
   },
   functWithoutResult: () => { },
