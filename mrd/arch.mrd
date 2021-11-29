@@ -8,10 +8,10 @@ flowchart LR
     c1[client1]
     c2[client2]
     b[broker]
-    c1-- TCP/WS ---b
-    c2-- TCP/WS ---b
-    b-- TCP/WS ---s1m
-    b-- TCP/WS ---s2m
+    c1-- TCP/WS/IPC ---b
+    c2-- TCP/WS/IPC ---b
+    b-- TCP/WS/IPC ---s1m
+    b-- TCP/WS/IPC ---s2m
     subgraph s1[server1]
         s1m
         s1m-- IPC ---s1w1
