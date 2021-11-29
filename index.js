@@ -1,10 +1,10 @@
 'use strict'
 const yac = require('ya-common')
 const clients = require('./lib/clients')
-const brokers = require('./lib/brokers')
+const brokers = require('./lib/brokers/rpc')
 
 module.exports = {
-  broker: brokers.rpc,
+  broker: brokers.create,
   client: {
     net: (connectOptions) => {
       const tcpChannel = yac.channels.net(connectOptions.host, connectOptions.port)
