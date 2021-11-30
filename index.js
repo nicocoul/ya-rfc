@@ -1,5 +1,5 @@
 'use strict'
-const yac = require('../ya-common/index')
+const yac = require('ya-common')
 const clients = require('./lib/clients')
 const brokers = require('./lib/brokers/rpc')
 
