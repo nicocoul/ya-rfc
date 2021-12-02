@@ -26,10 +26,9 @@ function newBroker (port) {
   result.plug(plugin)
   return result
 }
-
+const PORT = 8000
 describe('TCP stack', () => {
   test('executes a function that has a return value', async () => {
-    const PORT = 8080
     const rpcServer = newServer(PORT)
     const rpcBroker = newBroker(PORT)
     const client = newClient(PORT)
@@ -55,7 +54,6 @@ describe('TCP stack', () => {
   })
 
   test('executes a function that has no return value', async () => {
-    const PORT = 8081
     const rpcServer = newServer(PORT)
     const rpcBroker = newBroker(PORT)
     const client = newClient(PORT)
@@ -81,7 +79,6 @@ describe('TCP stack', () => {
   })
 
   test('executes with progression', async () => {
-    const PORT = 8082
     const rpcServer = newServer(PORT)
     const rpcBroker = newBroker(PORT)
     const client = newClient(PORT)
@@ -109,7 +106,6 @@ describe('TCP stack', () => {
   })
 
   test('executes with status', async () => {
-    const PORT = 8083
     const rpcServer = newServer(PORT)
     const rpcBroker = newBroker(PORT)
     const client = newClient(PORT)
@@ -137,7 +133,6 @@ describe('TCP stack', () => {
   })
 
   test('handles errors', async () => {
-    const PORT = 8084
     const rpcServer = newServer(PORT)
     const rpcBroker = newBroker(PORT)
     const client = newClient(PORT)
@@ -194,7 +189,6 @@ describe('TCP stack', () => {
   // })
 
   test('executes when multiple servers', async () => {
-    const PORT = 8086
     const rpcServer1 = newServer(PORT)
     const rpcServer2 = newServer(PORT)
     const rpcBroker = newBroker(PORT)
@@ -222,7 +216,6 @@ describe('TCP stack', () => {
   })
 
   test('executes when request is made before any server is started', async () => {
-    const PORT = 8087
     const rpcBroker = newBroker(PORT)
     const client = newClient(PORT)
     let result
@@ -248,7 +241,6 @@ describe('TCP stack', () => {
   })
 
   test('executes when broker is started after client and server', async () => {
-    const PORT = 8088
     const client = newClient(PORT)
     const rpcServer = newServer(PORT)
     let result
