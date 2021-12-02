@@ -9,12 +9,12 @@ const netPlugin = yac.plugins.net
 const netChannel = yac.channels.net
 
 function newServer (port) {
-  const channel = netChannel('localhost', port)
+  const channel = netChannel({ host: 'localhost', port })
   return rpcServer.create(channel, path.join(__dirname, '..', 'fixtures', 'rpc-module'))
 }
 
 function newClient (port) {
-  const channel = netChannel('localhost', port)
+  const channel = netChannel({ host: 'localhost', port })
   return rpcClient.create(channel)
 }
 
@@ -28,10 +28,11 @@ function newBroker (port) {
 }
 
 describe('TCP stack', () => {
-  test('executes afunction that has a return value', async () => {
-    const rpcServer = newServer(8080)
-    const rpcBroker = newBroker(8080)
-    const client = newClient(8080)
+  test('executes a function that has a return value', async () => {
+    const PORT = 8080
+    const rpcServer = newServer(PORT)
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
 
     let result
     let error
@@ -54,9 +55,10 @@ describe('TCP stack', () => {
   })
 
   test('executes a function that has no return value', async () => {
-    const rpcServer = newServer(8080)
-    const rpcBroker = newBroker(8080)
-    const client = newClient(8080)
+    const PORT = 8081
+    const rpcServer = newServer(PORT)
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
 
     let result
     let error
@@ -79,9 +81,10 @@ describe('TCP stack', () => {
   })
 
   test('executes with progression', async () => {
-    const rpcServer = newServer(8081)
-    const rpcBroker = newBroker(8081)
-    const client = newClient(8081)
+    const PORT = 8082
+    const rpcServer = newServer(PORT)
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
 
     let result
     let error
@@ -106,9 +109,10 @@ describe('TCP stack', () => {
   })
 
   test('executes with status', async () => {
-    const rpcServer = newServer(8081)
-    const rpcBroker = newBroker(8081)
-    const client = newClient(8081)
+    const PORT = 8083
+    const rpcServer = newServer(PORT)
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
 
     let result
     let error
@@ -133,9 +137,10 @@ describe('TCP stack', () => {
   })
 
   test('handles errors', async () => {
-    const rpcServer = newServer(8082)
-    const rpcBroker = newBroker(8082)
-    const client = newClient(8082)
+    const PORT = 8084
+    const rpcServer = newServer(PORT)
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
 
     let result
     let error
@@ -158,40 +163,42 @@ describe('TCP stack', () => {
     expect(count).toStrictEqual(1)
   })
 
-  test('executes 1000 in less than 500ms', async () => {
-    const rpcServer = newServer(8083)
-    const rpcBroker = newBroker(8083)
-    const client = newClient(8083)
-    const eCount = 1000
-    let result
-    let error
-    let count = 0
-    await pause(200)
-    for (let i = 0; i < eCount; i++) {
-      client.remote.funcWithResult(10)
-        .then(res => {
-          count++
-          result = res
-        })
-        .catch(err => {
-          count++
-          error = err
-        })
-    }
-    await pause(500)
-    rpcServer.kill()
-    rpcBroker.kill()
-    client.kill()
-    expect(result).toStrictEqual(10)
-    expect(count).toStrictEqual(eCount)
-    expect(error).toBeUndefined()
-  })
+  // test('executes 1000 in less than 500ms', async () => {
+  //   const PORT = 8085
+  //   const rpcServer = newServer(PORT)
+  //   const rpcBroker = newBroker(PORT)
+  //   const client = newClient(PORT)
+  //   const eCount = 1000
+  //   let result
+  //   let error
+  //   let count = 0
+  //   await pause(200)
+  //   for (let i = 0; i < eCount; i++) {
+  //     client.remote.funcWithResult(10)
+  //       .then(res => {
+  //         count++
+  //         result = res
+  //       })
+  //       .catch(err => {
+  //         count++
+  //         error = err
+  //       })
+  //   }
+  //   await pause(500)
+  //   rpcServer.kill()
+  //   rpcBroker.kill()
+  //   client.kill()
+  //   expect(result).toStrictEqual(10)
+  //   expect(count).toStrictEqual(eCount)
+  //   expect(error).toBeUndefined()
+  // })
 
   test('executes when multiple servers', async () => {
-    const rpcServer1 = newServer(8080)
-    const rpcServer2 = newServer(8080)
-    const rpcBroker = newBroker(8080)
-    const client = newClient(8080)
+    const PORT = 8086
+    const rpcServer1 = newServer(PORT)
+    const rpcServer2 = newServer(PORT)
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
     await pause(300)
     let result
     let error
@@ -215,8 +222,9 @@ describe('TCP stack', () => {
   })
 
   test('executes when request is made before any server is started', async () => {
-    const rpcBroker = newBroker(8080)
-    const client = newClient(8080)
+    const PORT = 8087
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
     let result
     let error
     let count = 0
@@ -229,7 +237,35 @@ describe('TCP stack', () => {
         count++
         error = err
       })
-    const rpcServer = newServer(8080)
+    const rpcServer = newServer(PORT)
+    await pause(300)
+    rpcServer.kill()
+    rpcBroker.kill()
+    client.kill()
+    expect(result).toStrictEqual(10)
+    expect(count).toStrictEqual(1)
+    expect(error).toBeUndefined()
+  })
+
+  test('executes when broker is started after client and server', async () => {
+    const PORT = 8088
+    const client = newClient(PORT)
+    const rpcServer = newServer(PORT)
+    let result
+    let error
+    let count = 0
+    client.remote.funcWithResult(10)
+      .then(res => {
+        count++
+        result = res
+      })
+      .catch(err => {
+        count++
+        error = err
+      })
+
+    await pause(100)
+    const rpcBroker = newBroker(PORT)
     await pause(300)
     rpcServer.kill()
     rpcBroker.kill()
