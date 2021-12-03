@@ -62,23 +62,23 @@ module.exports = {
       throw new Error(`unsupported transport ${JSON.stringify(transport)}`)
     }
   },
-  server: (transport, modulePath) => {
+  server: (transport, modulePath, options) => {
     if (!transport) throw new Error('transport required')
     if (!modulePath) throw new Error('modulePath required')
     if (transport.type === TYPES.tcp) {
       if (!transport.port) throw new Error('port required for tcp client transport')
       if (!transport.host) throw new Error('host required for tcp client transport')
       const netChannel = yac.channels.net({ host: transport.host, port: transport.port }, transport.reconnectDelay)
-      return clients.rpcServer(netChannel, modulePath)
+      return clients.rpcServer(netChannel, modulePath, options)
     } else if (transport.type === TYPES.ws) {
       if (!transport.port) throw new Error('port required for ws client transport')
       if (!transport.host) throw new Error('host required for ws client transport')
       const wsChannel = yac.channels.ws(transport.host, transport.port, transport.ssl, transport.reconnectDelay)
-      return clients.rpcServer(wsChannel, modulePath)
+      return clients.rpcServer(wsChannel, modulePath, options)
     } else if (transport.type === TYPES.ipc) {
       if (!transport.path) throw new Error('path required for ipc client transport')
       const netChannel = yac.channels.net({ path: transport.path })
-      return clients.rpcServer(netChannel, modulePath)
+      return clients.rpcServer(netChannel, modulePath, options)
     } else {
       throw new Error('unsupported transport')
     }

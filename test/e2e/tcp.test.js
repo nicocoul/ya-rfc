@@ -8,9 +8,9 @@ const yac = require('ya-common')
 const netPlugin = yac.plugins.net
 const netChannel = yac.channels.net
 
-function newServer (port) {
+function newServer (port, options) {
   const channel = netChannel({ host: 'localhost', port })
-  return rpcServer.create(channel, path.join(__dirname, '..', 'fixtures', 'rpc-module'))
+  return rpcServer.create(channel, path.join(__dirname, '..', 'fixtures', 'rpc-module'), options)
 }
 
 function newClient (port) {
@@ -258,12 +258,55 @@ describe('TCP stack', () => {
 
     await pause(100)
     const rpcBroker = newBroker(PORT)
-    await pause(300)
+    await pause(500)
     rpcServer.kill()
     rpcBroker.kill()
     client.kill()
     expect(result).toStrictEqual(10)
     expect(count).toStrictEqual(1)
     expect(error).toBeUndefined()
+  })
+
+  test('executes when multiple servers and route requests following affinity', async () => {
+    const rpcServer1 = newServer(PORT, { affinity: 'x' })
+    const rpcServer2 = newServer(PORT, { affinity: 'y' })
+    const rpcServer3 = newServer(PORT, { affinity: 'z' })
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
+    await pause(300)
+    const execChannelsIdsY = []
+    for (let i = 0; i < 3; i++) {
+      await client.remote.funcWithResult(10, {
+        affinity: 'y',
+        onStatus: (status) => {
+          if (status.on) {
+            execChannelsIdsY.push(status.on)
+          }
+        }
+      })
+    }
+    const execChannelsIdsX = []
+    for (let i = 0; i < 3; i++) {
+      await client.remote.funcWithResult(10, {
+        affinity: 'x',
+        onStatus: (status) => {
+          if (status.on) {
+            execChannelsIdsX.push(status.on)
+          }
+        }
+      })
+    }
+
+    rpcServer1.kill()
+    rpcServer2.kill()
+    rpcServer3.kill()
+    rpcBroker.kill()
+    client.kill()
+    expect(execChannelsIdsX.length).toBeGreaterThan(0)
+    expect(execChannelsIdsX[0]).not.toStrictEqual(execChannelsIdsY[0])
+    for (let i = 1; i < execChannelsIdsX.length; i++) {
+      expect(execChannelsIdsX[i - 1]).toStrictEqual(execChannelsIdsX[i])
+      expect(execChannelsIdsY[i - 1]).toStrictEqual(execChannelsIdsY[i])
+    }
   })
 })
