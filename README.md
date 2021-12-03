@@ -3,7 +3,7 @@
 
 Yet Another [Remote Function Call](https://en.wikipedia.org/wiki/Remote_procedure_call) library for Node js.
 
-Ya-rpc anables to run functions on remote machines within a distributed system without worrying about network messaging & load balancing.
+Ya-rpc anables to run functions on remote machines within a distributed system without worrying about network messaging or load balancing.
 
 It provides an easy way to implement performance-critical applications by parallel execution on machines and processes.
 

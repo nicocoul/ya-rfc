@@ -1,20 +1,18 @@
 {
   "name": "ya-rfc",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Yet Another Remote Function Call library for Node js",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
   "keywords": [
     "rpc",
     "rfc",
-    "socket",
+    "json",
     "tcp",
-    "tls",
-    "websocket",
-    "networking",
-    "realtime",
-    "server",
-    "client"
+    "grid computing",
+    "microservices",
+    "remote procedure call",
+    "remote function call"
   ],
   "homepage": "https://github.com/nicocoul/ya-rfc",
   "repository": {
