@@ -17,8 +17,6 @@ function convert (mermaidPath, pngPath) {
   req.end()
 }
 
-console.log(encodeURIComponent('test?'))
-
 // // examples
 // const examples = {
 //   procedures: fs.readFileSync(path.join(__dirname, '..', 'examples', 'procedures.js'), { encoding: 'utf8' }),

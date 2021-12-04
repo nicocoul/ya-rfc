@@ -1,10 +1,10 @@
-flowchart LR
-    s1m[main process]
-    s1w1[worker process1]
-    s1w2[worker process2]
-    s2m[main process]
-    s2w1[worker process1]
-    s2w2[worker process2]
+flowchart
+    s1m[main]
+    s1w1[worker 1]
+    s1w2[worker 2]
+    s2m[main]
+    s2w1[worker 1]
+    s2w2[worker 2]
     c1[client1]
     c2[client2]
     b[broker]
