@@ -1,27 +1,24 @@
 sequenceDiagram
     participant C as client1
     participant B as broker
-    participant S1 as server1 main process
-    participant S2 as server2 main process
-    participant S1W1 as server1 worker1
-    participant S1W2 as server1 worker2
-    S1-->>B: {cpu:0.3, mem:0.60}
-    S2-->>B: {cpu:0.33, mem:0.60}
-    C->>B: execute {function:'function1', args:['arg1']}
+    participant S1 as server1 <br /><br />main process
+    participant S1W1 as server1 <br /><br />worker1
+    participant S1W2 as server1 <br /><br />worker2
+    participant S2 as server2 <br /><br />main process
+    C->>B: rfc.remote.foo(bar)
     activate B
     note over B: select sever with minimum load
-    B->>S1: execute {function:'function1', args:['arg1']}
+    B->>S1: {function:'foo', args:[bar]}
     activate S1
-    B-->>C: {status: scheduled}
+    B-->>C: {status: 'scheduled'}
     deactivate B
-    note over S1: wait for enough free CPU & memory
     note over S1: select worker (round robin)
-    S1->>S1W1: execute {function:'function1', args:['arg1']}
+    S1->>S1W1: {function:'foo', args:[bar]}
     activate S1W1
-    S1-->>C: {status: started}
+    S1-->>C: {status: 'dispatched'}
     deactivate S1
-    S1W1-->>C: {progress: '50%'}
-    S1W1->>S1: {resullt: some result}
+    S1W1-->>C: {progress: 0.7}
+    S1W1->>S1: {result: 'some result'}
     deactivate S1W1
     activate S1
     S1-->>C: {status: 'end'}

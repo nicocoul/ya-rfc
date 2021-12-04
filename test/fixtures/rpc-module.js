@@ -6,5 +6,7 @@ module.exports = {
   },
   functWithoutResult: () => { },
   functThatThrows: () => { throw new Error('some error') },
-  asyncFunc: (a) => (new Promise(resolve => resolve(a)))
+  asyncFunc: (a, delay) => (new Promise(resolve => {
+    setTimeout(() => resolve(a), delay)
+  }))
 }
