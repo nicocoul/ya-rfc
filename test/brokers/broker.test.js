@@ -28,6 +28,24 @@ describe('Rpc broker', () => {
     expect(received.find(r => r.error !== undefined)).toBeUndefined()
   })
 
+  test('executes a function even if non existing where requested', async () => {
+    const channelServer = newDummyChannel()
+    const server = newRpcServer(channelServer)
+    const broker = rpcBroker.create()
+    const channelBroker = duplexify(channelServer.remote.readable, channelServer.remote.writable)
+    broker.plug(channelBroker)
+    const received = []
+    channelBroker.on('data', data => {
+      received.push(data)
+    })
+    channelBroker.write({ c: COMMANDS.RPC_EXECUTE, id: 1, procedure: 'noExists', args: [10] })
+    channelBroker.write({ c: COMMANDS.RPC_EXECUTE, id: 1, procedure: 'funcWithResult', args: [10] })
+    await pause(500)
+    server.kill()
+    expect(received.find(r => r.result !== undefined)).toStrictEqual({ c: COMMANDS.RPC_EXECUTE, id: 1, result: 10 })
+    expect(received.find(r => r.error !== undefined)).toBeDefined()
+  })
+
   // test('executes a function when 2 servers', async () => {
   //   const channelServer = newDummyChannel()
   //   const server1 = newRpcServer(channelServer)
