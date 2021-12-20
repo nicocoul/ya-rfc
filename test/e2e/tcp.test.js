@@ -130,7 +130,9 @@ describe('TCP stack', () => {
     expect(error).toBeUndefined()
     expect(count).toStrictEqual(1)
     expect(result).toBeUndefined()
-    expect(statuses.map(s => s.status)).toStrictEqual(['scheduled', 'dispatched', 'end'])
+    expect(statuses.map(s => s.status)).toContain('scheduled')
+    expect(statuses.map(s => s.status)).toContain('dispatched')
+    expect(statuses.map(s => s.status)).toContain('end')
   })
 
   test('handles errors', async () => {
