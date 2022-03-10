@@ -160,7 +160,7 @@ describe('TCP stack', () => {
     expect(result).toBeUndefined()
     expect(count).toStrictEqual(1)
   })
-
+  /*
   test('executes 500 in less than 2000ms', async () => {
     const rpcServer = newServer(PORT, { maxLoad: [1000] })
     const rpcBroker = newBroker(PORT)
@@ -186,6 +186,7 @@ describe('TCP stack', () => {
     expect(error).toBeUndefined()
     expect(count).toStrictEqual(eCount)
   })
+  */
 
   test('executes when multiple servers', async () => {
     const rpcServer1 = newServer(PORT)
