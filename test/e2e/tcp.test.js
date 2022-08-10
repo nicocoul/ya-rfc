@@ -160,34 +160,6 @@ describe('TCP stack', () => {
     expect(result).toBeUndefined()
     expect(count).toStrictEqual(1)
   })
-  /*
-  test('executes 500 in less than 2000ms', async () => {
-    const rpcServer = newServer(PORT, { maxLoad: [1000] })
-    const rpcBroker = newBroker(PORT)
-    const client = newClient(PORT)
-    const eCount = 500
-    let count = 0
-    let error
-    await pause(100)
-    for (let i = 0; i < eCount; i++) {
-      client.remote.funcWithResult(i + 1)
-        .then(_ => {
-          count++
-        })
-        .catch(_ => {
-          count++
-        })
-    }
-    await pause(2000)
-    rpcServer.kill()
-    rpcBroker.kill()
-    client.kill()
-
-    expect(error).toBeUndefined()
-    expect(count).toStrictEqual(eCount)
-  })
-  */
-
   test('executes when multiple servers', async () => {
     const rpcServer1 = newServer(PORT)
     const rpcServer2 = newServer(PORT)
@@ -352,5 +324,45 @@ describe('TCP stack', () => {
     const channel2 = Object.keys(byChannelId)[1]
     expect(byChannelId[channel1]).toBeGreaterThan(4)
     expect(byChannelId[channel2]).toBeGreaterThan(4)
+  }, 10000)
+
+  test('cancels a procedure when it is executing', async () => {
+    const rpcServer1 = newServer(PORT)
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
+    await pause(50)
+    let ended = false
+    client.remote.cancellableFunc({ cancelToken: '123456' }).then(() => {
+      ended = true
+    })
+    await pause(100)
+    client.cancel('123456')
+    await pause(1000)
+    expect(ended).toStrictEqual(true)
+
+    await pause(1000)
+    rpcServer1.kill()
+    rpcBroker.kill()
+    client.kill()
+  }, 10000)
+
+  test('cancels a procedure when it is not yet executing', async () => {
+    // const rpcServer1 = newServer(PORT)
+    const rpcBroker = newBroker(PORT)
+    const client = newClient(PORT)
+    await pause(50)
+    let ended = false
+    client.remote.cancellableFunc({ cancelToken: '123456' }).then(() => {
+      ended = true
+    })
+    await pause(50)
+    client.cancel('123456')
+    await pause(1000)
+    expect(ended).toStrictEqual(true)
+
+    await pause(1000)
+    // rpcServer1.kill()
+    rpcBroker.kill()
+    client.kill()
   }, 10000)
 })
