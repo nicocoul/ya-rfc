@@ -8,4 +8,4 @@ broker.events.on('lost-channel', (channel) => console.log('lost-channel', channe
 broker.events.on('schedule', (request) => console.log('schedule', request))
 broker.events.on('execute', (request) => console.log('execute', request))
 broker.events.on('executed', (request) => console.log('executed', request))
-broker.events.on('error', (request) => console.log('error', request))
+broker.events.on('failed', (request) => console.log('failed', request))
