@@ -1,5 +1,6 @@
 const { pause } = require('../common')
 const { fork } = require('child_process')
+const { NOTIFICATIONS } = require('../../lib/constants')
 const path = require('path')
 
 function createWorker () {
@@ -11,110 +12,78 @@ function createWorker () {
 describe('worker', () => {
   test('executes a function that returns a value', async () => {
     const worker = createWorker()
-    let result
-    let error
+    let response
     worker.on('message', data => {
-      if (data.result) {
-        result = data.result
-      }
-      if (data.error) {
-        result = data.error
-      }
+      response = data
     })
     worker.send({ id: 1, procedure: 'funcWithResult', args: [10] })
     await pause(500)
     worker.kill()
-    expect(result).toStrictEqual(10)
-    expect(error).toBeUndefined()
+    expect(response.notification).toStrictEqual(NOTIFICATIONS.EXECUTED)
+    expect(response.value).toStrictEqual(10)
   })
 
   test('executes an async function', async () => {
     const worker = createWorker()
-    let result
-    let error
+    let response
     worker.on('message', data => {
-      if (data.result) {
-        result = data.result
-      }
-      if (data.error) {
-        result = data.error
-      }
+      response = data
     })
     worker.send({ id: 1, procedure: 'asyncFunc', args: [10] })
     await pause(500)
     worker.kill()
-    expect(error).toBeUndefined()
-    expect(result).toStrictEqual(10)
+    expect(response.notification).toStrictEqual(NOTIFICATIONS.EXECUTED)
+    expect(response.value).toStrictEqual(10)
   })
 
   test('executes a function that does not return a value', async () => {
     const worker = createWorker()
-    let result = 'dummy'
-    let error
+    let response
     worker.on('message', data => {
-      if (data.result) {
-        result = data.result
-      }
-      if (data.error) {
-        result = data.error
-      }
+      response = data
     })
     worker.send({ id: 1, procedure: 'functWithoutResult', args: [10] })
     await pause(500)
     worker.kill()
-    expect(error).toBeUndefined()
-    expect(result).toStrictEqual('null')
+    expect(response.notification).toStrictEqual(NOTIFICATIONS.EXECUTED)
+    expect(response.value).toBeUndefined()
   })
 
   test('reports an error when trying to execute a function does not exists', async () => {
     const worker = createWorker()
-    let error
+    let response
     worker.on('message', data => {
-      if (data.error) {
-        error = data.error
-      }
+      response = data
     })
     worker.send({ id: 1, procedure: 'non existing function', args: [10] })
     await pause(500)
     worker.kill()
-    expect(error).toBeDefined()
+    expect(response.notification).toStrictEqual(NOTIFICATIONS.FAILED)
+    expect(response.value).toBeDefined()
   })
 
   test('reports an error when trying to execute a function that throws', async () => {
     const worker = createWorker()
-    let error
+    let response
     worker.on('message', data => {
-      if (data.error) {
-        error = data.error
-      }
+      response = data
     })
     worker.send({ id: 1, procedure: 'functThatThrows', args: [10] })
     await pause(500)
     worker.kill()
-    expect(error).toBeDefined()
+    expect(response.notification).toStrictEqual(NOTIFICATIONS.FAILED)
+    expect(response.value).toBeDefined()
   })
 
   test('reports progression', async () => {
     const worker = createWorker()
-    let error
-    let result
-    let progress
+    const responses = []
     worker.on('message', data => {
-      if (data.error) {
-        error = data.error
-      }
-      if (data.progress) {
-        progress = data.progress
-      }
-      if (data.result) {
-        result = data.result
-      }
+      responses.push(data)
     })
     worker.send({ id: 1, procedure: 'funcWithProgress' })
     await pause(500)
     worker.kill()
-    expect(error).toBeUndefined()
-    expect(result).toBeDefined()
-    expect(progress).toBeDefined()
+    expect(responses.length).toStrictEqual(3)
   })
 })

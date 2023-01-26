@@ -2,23 +2,14 @@
 module.exports = {
   funcWithResult: (a) => a,
   funcWithProgress: (onProgress) => {
-    onProgress('done')
+    onProgress(1)
+    onProgress(2)
   },
   functWithoutResult: () => { },
   functThatThrows: () => { throw new Error('some error') },
-  asyncFunc: (a, delay) => (new Promise(resolve => {
-    setTimeout(() => resolve(a), delay)
-  })),
-  cancellableFunc: async (onProgress, isCancelled) => {
-    let cancelled = false
-    while (!cancelled) {
-      await (new Promise(resolve => {
-        setTimeout(() => resolve(), 100)
-      }))
-      cancelled = isCancelled()
-      if (cancelled) {
-        return
-      }
-    }
+  asyncFunc: (a, delay) => {
+    return new Promise(resolve => {
+      setTimeout(() => resolve(a), delay)
+    })
   }
 }
