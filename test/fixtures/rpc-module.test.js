@@ -25,6 +25,6 @@ describe('fixtures', () => {
     expect(functWithoutResult('x')).toBeUndefined()
   })
   test('functThatThrows works', () => {
-    expect(() => functThatThrows()).toThrow('some error')
+    expect(() => functThatThrows()).toThrow('ERROR_MESSAGE')
   })
 })
