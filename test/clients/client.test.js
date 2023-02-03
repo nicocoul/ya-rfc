@@ -1,5 +1,6 @@
 const { newDummyChannel } = require('../common')
 const { COMMANDS } = require('../../lib/constants')
+const f = require('../../lib/factories')
 const rpc = require('../../lib/clients/rpc-client')
 
 describe('client.remote', () => {
@@ -12,12 +13,12 @@ describe('client.remote', () => {
     })
     client.remote.someFunction(1, 2)
     client.kill()
-    expect(data).toBeDefined()
     expect(data.c).toStrictEqual(COMMANDS.EXECUTE)
     expect(data.id).toBeDefined()
-    expect(data.procedure).toStrictEqual('someFunction')
-    expect(data.args).toStrictEqual([1, 2])
+    expect(data.pr).toStrictEqual('someFunction')
+    expect(data.ar).toStrictEqual([1, 2])
   })
+
   test('sends command with option onProgress', async () => {
     const channel = newDummyChannel()
     const client = rpc.create(channel)
@@ -30,8 +31,8 @@ describe('client.remote', () => {
     expect(data).toBeDefined()
     expect(data.c).toStrictEqual(COMMANDS.EXECUTE)
     expect(data.id).toBeDefined()
-    expect(data.procedure).toStrictEqual('someFunction')
-    expect(data.args).toStrictEqual([1, 2])
+    expect(data.pr).toStrictEqual('someFunction')
+    expect(data.ar).toStrictEqual([1, 2])
   })
 
   test('sends command with options onProgress', () => {
@@ -46,9 +47,10 @@ describe('client.remote', () => {
     expect(data).toBeDefined()
     expect(data.c).toStrictEqual(COMMANDS.EXECUTE)
     expect(data.id).toBeDefined()
-    expect(data.procedure).toStrictEqual('someFunction')
-    expect(data.args).toStrictEqual([1, 2])
+    expect(data.pr).toStrictEqual('someFunction')
+    expect(data.ar).toStrictEqual([1, 2])
   })
+
   test('sends command with no arguments', () => {
     const channel = newDummyChannel()
     const client = rpc.create(channel)
@@ -61,9 +63,10 @@ describe('client.remote', () => {
     expect(data).toBeDefined()
     expect(data.c).toStrictEqual(COMMANDS.EXECUTE)
     expect(data.id).toBeDefined()
-    expect(data.procedure).toStrictEqual('someFunction')
-    expect(data.args).toStrictEqual([])
+    expect(data.pr).toStrictEqual('someFunction')
+    expect(data.ar).toStrictEqual([])
   })
+
   test('sends command with an oject argument', () => {
     const channel = newDummyChannel()
     const client = rpc.create(channel)
@@ -76,7 +79,7 @@ describe('client.remote', () => {
     expect(data).toBeDefined()
     expect(data.c).toStrictEqual(COMMANDS.EXECUTE)
     expect(data.id).toBeDefined()
-    expect(data.procedure).toStrictEqual('someFunction')
-    expect(data.args).toStrictEqual([{ foo: 'bar' }])
+    expect(data.pr).toStrictEqual('someFunction')
+    expect(data.ar).toStrictEqual([{ foo: 'bar' }])
   })
 })
