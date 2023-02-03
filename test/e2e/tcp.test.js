@@ -4,7 +4,9 @@ const { pause } = require('../common')
 const rpcBroker = require('../../lib/brokers/rpc')
 const rpcServer = require('../../lib/clients/rpc-server')
 const rpcClient = require('../../lib/clients/rpc-client')
+const { EVENTS } = require('../../lib/constants')
 const yac = require('ya-common')
+const { hasUncaughtExceptionCaptureCallback } = require('process')
 const logger = yac.logger(__filename)
 const netPlugin = yac.plugins.net
 const netChannel = yac.channels.net
@@ -27,109 +29,128 @@ function newBroker (port) {
   result.plug(plugin)
   return result
 }
-const PORT = 8001
+function aggrEvents (emitter) {
+  const evs = [EVENTS.SCHEDULE, EVENTS.EXECUTE, EVENTS.EXECUTED, EVENTS.FAILED, EVENTS.CANCELLED]
+  const result = evs.reduce((acc, current) => {
+    acc[current] = 0
+    return acc
+  }, {})
+  evs.forEach(e => {
+    emitter.events.on(e, () => {
+      result[e]++
+    })
+  })
+  return result
+}
+async function output (promise) {
+  try {
+    return { result: (await promise), error: undefined }
+  } catch (error) {
+    return { result: undefined, error }
+  }
+}
+const PORT = 8002
 describe('TCP stack', () => {
   test('executes a function that has a return value', async () => {
-    const server = newServer(PORT)
+    const server = newServer(PORT, { workers: 1 })
     const broker = newBroker(PORT)
     const client = newClient(PORT)
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server)]
 
-    let result
-    let error
-    let count = 0
-    await client.remote.funcWithResult(10)
-      .then(res => {
-        count++
-        result = res
-      })
-      .catch(err => {
-        count++
-        error = err
-      })
+    const out = await output(client.remote.funcWithResult(10))
+
     server.kill()
     broker.kill()
     client.kill()
-    expect(result).toStrictEqual(10)
-    expect(count).toStrictEqual(1)
-    expect(error).toBeUndefined()
+    expect(out).toStrictEqual({ result: 10, error: undefined })
+    expect(events).toStrictEqual([
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 }
+    ])
   })
 
   test('executes a function that has no return value', async () => {
-    const server = newServer(PORT)
-    const rpcBroker = newBroker(PORT)
+    const server = newServer(PORT, { workers: 1 })
+    const broker = newBroker(PORT)
     const client = newClient(PORT)
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server)]
 
-    let result
-    let error
-    let count = 0
-    await client.remote.functWithoutResult(10)
-      .then(res => {
-        count++
-        result = res
-      })
-      .catch(err => {
-        count++
-        error = err
-      })
+    const out = await output(client.remote.functWithoutResult(10))
     server.kill()
-    rpcBroker.kill()
+    broker.kill()
     client.kill()
-    expect(result).toBeUndefined()
-    expect(count).toStrictEqual(1)
-    expect(error).toBeUndefined()
+
+    expect(out).toStrictEqual({ result: undefined, error: undefined })
+    expect(events).toStrictEqual([
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 }
+    ])
   })
 
   test('executes with progression', async () => {
-    const server = newServer(PORT)
+    const server = newServer(PORT, { workers: 1 })
     const broker = newBroker(PORT)
     const client = newClient(PORT)
 
-    let result
-    let error
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server)]
+
     const progress = []
-    let count = 0
-    await client.remote.funcWithProgress({ onProgress: p => progress.push(p) })
-      .then(res => {
-        count++
-        result = res
-      })
-      .catch(err => {
-        count++
-        error = err
-      })
+
+    const out = await output(client.remote.funcWithProgress({ onProgress: p => progress.push(p) }))
     server.kill()
     broker.kill()
     client.kill()
-    expect(error).toBeUndefined()
-    expect(count).toStrictEqual(1)
-    expect(result).toBeUndefined()
+
+    expect(out).toStrictEqual({ result: undefined, error: undefined })
+    expect(events).toStrictEqual([
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 }
+    ])
     expect(progress).toStrictEqual([1, 2])
   })
 
-  test('handles errors', async () => {
+  test('handles functions that throws', async () => {
     const server = newServer(PORT)
     const broker = newBroker(PORT)
     const client = newClient(PORT)
 
-    let result
-    let error
-    let count = 0
-    await client.remote.functThatThrows()
-      .then(res => {
-        count++
-        result = res
-      })
-      .catch(err => {
-        count++
-        error = err
-      })
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server)]
+
+    const out = await output(client.remote.functThatThrows())
 
     server.kill()
     broker.kill()
     client.kill()
-    expect(error).toBeDefined()
-    expect(result).toBeUndefined()
-    expect(count).toStrictEqual(1)
+    expect(out.error.code).toStrictEqual('ERROR_CODE')
+    expect(out.error.message).toStrictEqual('ERROR_MESSAGE')
+    expect(events).toStrictEqual([
+      { schedule: 1, execute: 1, executed: 0, failed: 1, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 0, failed: 1, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 0, failed: 1, cancelled: 0 }
+    ])
+  })
+
+  test('throws when procedure does not exists', async () => {
+    const server = newServer(PORT)
+    const broker = newBroker(PORT)
+    const client = newClient(PORT)
+
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server)]
+
+    const out = await output(client.remote.notExistingProcedure())
+
+    server.kill()
+    broker.kill()
+    client.kill()
+    expect(out.error.code).toStrictEqual('NO_PROCEDURE')
+    expect(events).toStrictEqual([
+      { schedule: 1, execute: 1, executed: 0, failed: 1, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 0, failed: 1, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 0, failed: 1, cancelled: 0 }
+    ])
   })
 
   test('executes when multiple servers', async () => {
@@ -138,250 +159,223 @@ describe('TCP stack', () => {
     const broker = newBroker(PORT)
     const client = newClient(PORT)
 
-    let result
-    let error
-    let count = 0
-    await client.remote.funcWithResult(10)
-      .then(res => {
-        count++
-        result = res
-      })
-      .catch(err => {
-        count++
-        error = err
-      })
+    const events = [aggrEvents(client), aggrEvents(broker)]
+
+    const out = await output(client.remote.funcWithResult(10))
+
     server1.kill()
     server2.kill()
     broker.kill()
     client.kill()
 
-    expect(error).toBeUndefined()
-    expect(result).toStrictEqual(10)
-    expect(count).toStrictEqual(1)
+    expect(out).toStrictEqual({ result: 10, error: undefined })
+
+    expect(events).toStrictEqual([
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 }
+    ])
   })
 
   test('executes when request is made before server is started', async () => {
     const broker = newBroker(PORT)
     const client = newClient(PORT)
-    let result
-    let error
-    let count = 0
 
-    client.remote.funcWithResult(10)
-      .then(res => {
-        logger.debug(res)
-        count++
-        result = res
-      })
-      .catch(err => {
-        logger.warn(err)
-        count++
-        error = err
-      })
+    const events = [aggrEvents(client), aggrEvents(broker)]
+
+    const out = output(client.remote.funcWithResult(10))
+
     await pause(100)
-    logger.debug('will create server')
+
     const server = newServer(PORT, { workers: 1 })
+    const serverEvents = aggrEvents(server)
     await pause(500)
     server.kill()
     broker.kill()
     client.kill()
-    logger.debug(`will check, count=${count} result=${result}`)
-    expect(error).toBeUndefined()
-    expect(count).toStrictEqual(1)
-    expect(result).toStrictEqual(10)
+
+    expect(await out).toStrictEqual({ result: 10, error: undefined })
+    expect(events).toStrictEqual([
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 }
+    ])
+    expect(serverEvents).toStrictEqual({ schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 })
   })
 
   test('executes when broker is started after client and server', async () => {
     const client = newClient(PORT)
-    const server = newServer(PORT)
-    let result
-    let error
-    let count = 0
-    client.remote.funcWithResult(10)
-      .then(res => {
-        count++
-        result = res
-      })
-      .catch(err => {
-        count++
-        error = err
-      })
+    const server = newServer(PORT, { workers: 1 })
+    const events = [aggrEvents(client), aggrEvents(server)]
+
+    const out = output(client.remote.funcWithResult(10))
 
     await pause(100)
     const broker = newBroker(PORT)
+    const brokerEvents = aggrEvents(server)
     await pause(1000)
     server.kill()
     broker.kill()
     client.kill()
 
-    expect(error).toBeUndefined()
-    expect(result).toStrictEqual(10)
-    expect(count).toStrictEqual(1)
+    expect(await out).toStrictEqual({ result: 10, error: undefined })
+    expect(events).toStrictEqual([
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 },
+      { schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 }
+    ])
+    expect(brokerEvents).toStrictEqual({ schedule: 1, execute: 1, executed: 1, failed: 0, cancelled: 0 })
   })
 
   test('executes with affinity', async () => {
-    const server1 = newServer(PORT, { affinity: 1, workers: 1 })
-    const server2 = newServer(PORT, { affinity: 2, workers: 1 })
-    const server3 = newServer(PORT, { affinity: 3, workers: 1 })
+    const server1 = newServer(PORT, { affinity: 'aff1', workers: 1 })
+    const server2 = newServer(PORT, { affinity: 'aff2', workers: 1 })
+    const server3 = newServer(PORT, { affinity: 'aff3', workers: 1 })
     const broker = newBroker(PORT)
     const client = newClient(PORT)
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server1), aggrEvents(server2), aggrEvents(server3)]
+
+    // make sure stack is ready
     await pause(2000)
-    let countServer1 = 0
-    let countServer2 = 0
-    let countServer3 = 0
-    server1.events.on('executed', () => {
-      countServer1++
-    })
-    server2.events.on('executed', () => {
-      countServer2++
-    })
-    server3.events.on('executed', () => {
-      countServer3++
-    })
+
     const promises = [
-      [...new Array(10)].map(() => client.remote.funcWithResult(10, { affinity: 1 })),
-      [...new Array(10)].map(() => client.remote.funcWithResult(10, { affinity: 2 }))
+      [...new Array(10)].map(() => client.remote.funcWithResult(1, { affinity: 'aff1' })),
+      [...new Array(10)].map(() => client.remote.funcWithResult(2, { affinity: 'aff2' }))
     ].flatMap(el => el)
     await Promise.all(promises)
+
     server1.kill()
     server2.kill()
     server3.kill()
     broker.kill()
     client.kill()
-    expect({ countServer1, countServer2, countServer3 }).toStrictEqual({ countServer1: 10, countServer2: 10, countServer3: 0 })
+    expect(events).toStrictEqual([
+      { schedule: 20, execute: 20, executed: 20, failed: 0, cancelled: 0 },
+      { schedule: 20, execute: 20, executed: 20, failed: 0, cancelled: 0 },
+      { schedule: 10, execute: 10, executed: 10, failed: 0, cancelled: 0 },
+      { schedule: 10, execute: 10, executed: 10, failed: 0, cancelled: 0 },
+      { schedule: 0, execute: 0, executed: 0, failed: 0, cancelled: 0 }
+    ])
   }, 100000)
 
-  test('executes with load balancing', async () => {
+  test('distributes load', async () => {
     const server1 = newServer(PORT, { affinity: 1, workers: 2 })
     const server2 = newServer(PORT, { affinity: 1, workers: 2 })
     const broker = newBroker(PORT)
     const client = newClient(PORT)
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server1), aggrEvents(server2)]
+
     await pause(2000)
-    let countServer1 = 0
-    let countServer2 = 0
-    server1.events.on('executed', () => {
-      countServer1++
-    })
-    server2.events.on('executed', () => {
-      countServer2++
-    })
+
     const promises = [...new Array(10)].map(() => client.remote.asyncFunc(10, 100, { affinity: 1 }))
     await Promise.all(promises)
+
     server1.kill()
     server2.kill()
     broker.kill()
     client.kill()
-    expect({ countServer1, countServer2 }).toStrictEqual({ countServer1: 5, countServer2: 5 })
+    expect(events).toStrictEqual([
+      { schedule: 10, execute: 10, executed: 10, failed: 0, cancelled: 0 },
+      { schedule: 10, execute: 10, executed: 10, failed: 0, cancelled: 0 },
+      { schedule: 5, execute: 5, executed: 5, failed: 0, cancelled: 0 },
+      { schedule: 5, execute: 5, executed: 5, failed: 0, cancelled: 0 }
+    ])
   }, 10000)
 
   test('cancels when it is executing', async () => {
-    const server = newServer(PORT, { workers: 3 })
+    const server = newServer(PORT, { workers: 4 })
     const broker = newBroker(PORT)
     const client = newClient(PORT)
-    await pause(2000)
-    const out1 = [undefined, undefined]
-    const out2 = [undefined, undefined]
-    const out3 = [undefined, undefined]
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server)]
 
-    client.remote.asyncFunc('result', 100000, { cancelToken: 'ct1' })
-      .then((result) => {
-        out1[0] = result
-      })
-      .catch((error) => {
-        out1[1] = error
-      })
-    client.remote.asyncFunc('result', 100000, { cancelToken: 'ct2' })
-      .then((result) => {
-        out2[0] = result
-      })
-      .catch((error) => {
-        out2[1] = error
-      })
-    client.remote.asyncFunc('result', 10, { cancelToken: 'ct3' })
-      .then((result) => {
-        out3[0] = result
-      })
-      .catch((error) => {
-        out3[1] = error
-      })
-    await pause(1000)
+    await pause(2000)
+
+    const out1 = output(client.remote.asyncFunc('result1', 100000, { cancelToken: 'ct1' }))
+    client.remote.asyncFunc('result2', 100000, { cancelToken: 'ct2' })
+    const out3 = output(client.remote.asyncFunc('result3', 400, { cancelToken: 'ct3' }))
+
+    await pause(200)
     client.cancel('ct1')
-    await pause(1000)
 
     await pause(1000)
     server.kill()
     broker.kill()
     client.kill()
 
-    expect(out1[1].code).toStrictEqual('CANCELLED')
-    expect(out2).toStrictEqual([undefined, undefined])
-    expect(out3).toStrictEqual(['result', undefined])
+    expect((await out1).error.code).toStrictEqual('CANCELLED')
+    expect(await out3).toStrictEqual({ result: 'result3', error: undefined })
+
+    expect(events).toStrictEqual([
+      { schedule: 3, execute: 3, executed: 1, failed: 0, cancelled: 1 },
+      { schedule: 3, execute: 3, executed: 1, failed: 0, cancelled: 1 },
+      { schedule: 3, execute: 3, executed: 1, failed: 0, cancelled: 1 }
+    ])
   }, 10000)
 
   test('cancels when no server', async () => {
     const broker = newBroker(PORT)
     const client = newClient(PORT)
-    await pause(2000)
-    const out1 = [undefined, undefined]
+    const events = [aggrEvents(client), aggrEvents(broker)]
 
-    client.remote.asyncFunc('result', 100000, { cancelToken: 'ct1' })
-      .then((result) => {
-        out1[0] = result
-      })
-      .catch((error) => {
-        out1[1] = error
-      })
-    await pause(1000)
+    await pause(2000)
+
+    const out1 = output(client.remote.asyncFunc('result1', 100000, { cancelToken: 'ct1' }))
+    client.remote.asyncFunc('result2', 100000, { cancelToken: 'ct2' })
+    client.remote.asyncFunc('result3', 400, { cancelToken: 'ct3' })
+
+    await pause(200)
     client.cancel('ct1')
+
     await pause(1000)
     broker.kill()
     client.kill()
 
-    expect(out1[1].code).toStrictEqual('CANCELLED')
-    expect(out1[0]).toBeUndefined()
+    expect((await out1).error.code).toStrictEqual('CANCELLED')
+
+    expect(events).toStrictEqual([
+      { schedule: 3, execute: 3, executed: 0, failed: 0, cancelled: 1 },
+      { schedule: 3, execute: 0, executed: 0, failed: 0, cancelled: 1 }])
   }, 10000)
 
   test('cancels when no broker', async () => {
     const client = newClient(PORT)
+    const events = [aggrEvents(client)]
+
     await pause(2000)
-    const out1 = [undefined, undefined]
 
-    client.remote.asyncFunc('result', 100000, { cancelToken: 'ct1' })
-      .then((result) => {
-        out1[0] = result
-      })
-      .catch((error) => {
-        out1[1] = error
-      })
+    const out1 = output(client.remote.asyncFunc('result1', 100000, { cancelToken: 'ct1' }))
+    client.remote.asyncFunc('result2', 100000, { cancelToken: 'ct2' })
+    client.remote.asyncFunc('result3', 400, { cancelToken: 'ct3' })
+
+    await pause(200)
     client.cancel('ct1')
-    const broker = newBroker(PORT)
-    await pause(100)
-    client.kill()
-    broker.kill()
 
-    expect(out1[1].code).toStrictEqual('CANCELLED')
-    expect(out1[0]).toBeUndefined()
+    await pause(1000)
+    client.kill()
+
+    expect((await out1).error.code).toStrictEqual('CANCELLED')
+
+    expect(events).toStrictEqual([
+      { schedule: 3, execute: 3, executed: 0, failed: 0, cancelled: 1 }])
   }, 10000)
 
-  test('reject when broker disconnected', async () => {
+  test('rejects when broker disconnected from client', async () => {
     const client = newClient(PORT, 50, 1)
     const broker = newBroker(PORT)
+    const events = [aggrEvents(client), aggrEvents(broker)]
+
+    const promises = [...new Array(2)].map(() => output(client.remote.asyncFunc(10, 10000)))
+
     await pause(1000)
-
-    const count = 10
-    let countErrors = 0
-
-    const promises = [...new Array(count)].map(() => {
-      return client.remote.asyncFunc(10, 10000)
-        .catch(() => { countErrors++ })
-    })
-    Promise.all(promises)
-
-    await pause(100)
     broker.kill()
     await pause(1000)
     client.kill()
 
-    expect(countErrors).toStrictEqual(count)
+    const result = (await Promise.all(promises)).map(r => ({ result: undefined, code: r.error.code }))
+    expect(result).toStrictEqual([
+      { result: undefined, code: 'LOST_BROKER' },
+      { result: undefined, code: 'LOST_BROKER' }
+    ])
+
+    expect(events).toStrictEqual([
+      { schedule: 2, execute: 2, executed: 0, failed: 2, cancelled: 0 },
+      { schedule: 2, execute: 0, executed: 0, failed: 0, cancelled: 0 }])
   }, 10000)
 })
