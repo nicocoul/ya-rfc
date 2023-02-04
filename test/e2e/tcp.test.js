@@ -6,8 +6,6 @@ const rpcServer = require('../../lib/clients/rpc-server')
 const rpcClient = require('../../lib/clients/rpc-client')
 const { EVENTS } = require('../../lib/constants')
 const yac = require('ya-common')
-const { hasUncaughtExceptionCaptureCallback } = require('process')
-const logger = yac.logger(__filename)
 const netPlugin = yac.plugins.net
 const netChannel = yac.channels.net
 
@@ -256,27 +254,52 @@ describe('TCP stack', () => {
   }, 100000)
 
   test('distributes load', async () => {
-    const server1 = newServer(PORT, { affinity: 1, workers: 2 })
-    const server2 = newServer(PORT, { affinity: 1, workers: 2 })
+    const server1 = newServer(PORT, { workers: 2 })
+    const server2 = newServer(PORT, { workers: 2 })
     const broker = newBroker(PORT)
     const client = newClient(PORT)
     const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server1), aggrEvents(server2)]
 
     await pause(2000)
 
-    const promises = [...new Array(10)].map(() => client.remote.asyncFunc(10, 100, { affinity: 1 }))
+    const promises = [...new Array(10)].map(() => client.remote.asyncFunc(10, 100))
     await Promise.all(promises)
 
     server1.kill()
     server2.kill()
     broker.kill()
     client.kill()
-    expect(events).toStrictEqual([
-      { schedule: 10, execute: 10, executed: 10, failed: 0, cancelled: 0 },
-      { schedule: 10, execute: 10, executed: 10, failed: 0, cancelled: 0 },
-      { schedule: 5, execute: 5, executed: 5, failed: 0, cancelled: 0 },
-      { schedule: 5, execute: 5, executed: 5, failed: 0, cancelled: 0 }
-    ])
+    expect(events[0]).toStrictEqual({ schedule: 10, execute: 10, executed: 10, failed: 0, cancelled: 0 })
+    expect(events[1]).toStrictEqual({ schedule: 10, execute: 10, executed: 10, failed: 0, cancelled: 0 })
+    expect(events[2]).toStrictEqual({ schedule: 5, execute: 5, executed: 5, failed: 0, cancelled: 0 })
+    expect(events[3]).toStrictEqual({ schedule: 5, execute: 5, executed: 5, failed: 0, cancelled: 0 })
+  }, 10000)
+
+  test('distributes load when weighting requests', async () => {
+    const server1 = newServer(PORT, { workers: 5 })
+    const server2 = newServer(PORT, { workers: 5 })
+    const broker = newBroker(PORT)
+    const client = newClient(PORT)
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server1), aggrEvents(server2)]
+
+    await pause(2000)
+
+    const promises = [
+      client.remote.asyncFunc(10, 1000, { load: 10 }),
+      client.remote.asyncFunc(10, 100, { load: 1 }),
+      client.remote.asyncFunc(10, 100, { load: 1 }),
+      client.remote.asyncFunc(10, 100, { load: 1 })
+    ]
+    await Promise.all(promises)
+
+    server1.kill()
+    server2.kill()
+    broker.kill()
+    client.kill()
+    expect(events[0]).toStrictEqual({ schedule: 4, execute: 4, executed: 4, failed: 0, cancelled: 0 })
+    expect(events[1]).toStrictEqual({ schedule: 4, execute: 4, executed: 4, failed: 0, cancelled: 0 })
+    expect([events[2], events[3]].some(e => e.executed === 3)).toBeTruthy()
+    expect([events[2], events[3]].some(e => e.executed === 1)).toBeTruthy()
   }, 10000)
 
   test('cancels when it is executing', async () => {
