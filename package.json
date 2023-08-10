@@ -1,6 +1,6 @@
 {
   "name": "ya-rfc",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Yet Another Remote Function Call library for Node js",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "uuid": "^8.3.2",
-    "ya-common": "^1.0.15"
+    "ya-common": "^1.0.16"
   },
   "devDependencies": {
     "eslint": "^8.36.0",
