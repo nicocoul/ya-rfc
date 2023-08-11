@@ -49,6 +49,7 @@ async function output (promise) {
 }
 const PORT = 8002
 describe('TCP stack', () => {
+
   test('executes a function that has a return value', async () => {
     const server = newServer(PORT, { workers: 1 })
     const broker = newBroker(PORT)
@@ -234,8 +235,8 @@ describe('TCP stack', () => {
     await pause(2000)
 
     const promises = [
-      [...new Array(10)].map(() => client.remote.funcWithResult(1, { affinity: 'aff1' })),
-      [...new Array(10)].map(() => client.remote.funcWithResult(2, { affinity: 'aff2' }))
+      [...new Array(10)].map((_, index) => client.remote.funcWithResult(index, { affinity: 'aff1' })),
+      [...new Array(10)].map((_, index) => client.remote.funcWithResult(index, { affinity: 'aff2' }))
     ].flatMap(el => el)
     await Promise.all(promises)
 
@@ -262,7 +263,7 @@ describe('TCP stack', () => {
 
     await pause(2000)
 
-    const promises = [...new Array(10)].map(() => client.remote.asyncFunc(10, 100))
+    const promises = [...new Array(10)].map((_, index) => client.remote.asyncFunc(index, 100))
     await Promise.all(promises)
 
     server1.kill()
@@ -285,10 +286,10 @@ describe('TCP stack', () => {
     await pause(2000)
 
     const promises = [
-      client.remote.asyncFunc(10, 1000, { load: 10 }),
-      client.remote.asyncFunc(10, 100, { load: 1 }),
-      client.remote.asyncFunc(10, 100, { load: 1 }),
-      client.remote.asyncFunc(10, 100, { load: 1 })
+      client.remote.asyncFunc(1, 1000, { load: 10 }),
+      client.remote.asyncFunc(2, 100, { load: 1 }),
+      client.remote.asyncFunc(3, 100, { load: 1 }),
+      client.remote.asyncFunc(4, 100, { load: 1 })
     ]
     await Promise.all(promises)
 
@@ -384,7 +385,7 @@ describe('TCP stack', () => {
     const broker = newBroker(PORT)
     const events = [aggrEvents(client), aggrEvents(broker)]
 
-    const promises = [...new Array(2)].map(() => output(client.remote.asyncFunc(10, 10000)))
+    const promises = [...new Array(2)].map((_, index) => output(client.remote.asyncFunc(index, 10000)))
 
     await pause(1000)
     broker.kill()
@@ -401,4 +402,34 @@ describe('TCP stack', () => {
       { schedule: 2, execute: 2, executed: 0, failed: 2, cancelled: 0 },
       { schedule: 2, execute: 0, executed: 0, failed: 0, cancelled: 0 }])
   }, 10000)
+
+  test('cancels the execution of a function if it is already executing with the same arguments', async () => {
+    const server = newServer(PORT, { workers: 10 })
+    const broker = newBroker(PORT)
+    const client = newClient(PORT)
+    const events = [aggrEvents(client), aggrEvents(broker), aggrEvents(server)]
+
+    const promises = [
+      client.remote.asyncFunc(1, 100),
+      client.remote.asyncFunc(1, 100),
+      client.remote.asyncFunc(1, 100),
+      client.remote.asyncFunc(1, 100)
+    ]
+    const result = await Promise.allSettled(promises)
+
+    server.kill()
+    broker.kill()
+    client.kill()
+
+    expect(result).toHaveLength(4)
+
+    expect(result.filter(r => r.status === 'rejected')).toHaveLength(3)
+    expect(result.filter(r => r.status === 'fulfilled')).toHaveLength(1)
+
+    expect(events).toStrictEqual([
+      { schedule: 4, execute: 4, executed: 1, failed: 0, cancelled: 3 },
+      { schedule: 4, execute: 4, executed: 1, failed: 0, cancelled: 3 },
+      { schedule: 4, execute: 4, executed: 1, failed: 0, cancelled: 3 }
+    ])
+  })
 })

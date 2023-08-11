@@ -6,6 +6,7 @@ const rpc = require('../../lib/clients/rpc-server')
 const modulePath = path.join(__dirname, '..', 'fixtures', 'rpc-module')
 
 describe('server', () => {
+
   test('executes a function that returns a value', async () => {
     const channel = newDummyChannel()
     const server = rpc.create(channel, modulePath, { workers: 1 })
@@ -85,5 +86,23 @@ describe('server', () => {
     expect(response.length).toStrictEqual(3)
     expect(response[0].v).toStrictEqual(1)
     expect(response[1].v).toStrictEqual(2)
+  })
+
+  test('cancels when already executing', async () => {
+    const channel = newDummyChannel()
+    const server = rpc.create(channel, modulePath, { workers: 2 })
+    const response = []
+    channel.remote.readable.on('data', message => {
+      response.push(message)
+    })
+    for (let i = 0; i < 10; i++) {
+      channel.remote.writable.write({ c: COMMANDS.EXECUTE, id: i, pr: 'asyncFunc', ar: ['some', 10], sn: 'some', l: 1 })
+    }
+    await pause(500)
+
+    server.kill()
+    expect(response.length).toStrictEqual(10)
+    expect(response.filter(r => r.c === NOTIFICATIONS.CANCELLED).length).toStrictEqual(9)
+    expect(response.filter(r => r.c === NOTIFICATIONS.EXECUTED).length).toStrictEqual(1)
   })
 })
